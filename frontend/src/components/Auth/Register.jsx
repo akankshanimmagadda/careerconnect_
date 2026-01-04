@@ -27,7 +27,7 @@ const Register = () => {
     }
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/api/v1/user/register",
+        "https://careerconnect-tgzi.onrender.com/api/v1/user/register",
         { name, email, role, password },
         {
           headers: {

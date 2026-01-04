@@ -17,7 +17,7 @@ const VerifyPending = () => {
     setResending(true);
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/v1/user/resend-verification",
+        "https://careerconnect-tgzi.onrender.com/api/v1/user/resend-verification",
         { email }
       );
       toast.success(res.data.message);

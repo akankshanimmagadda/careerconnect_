@@ -22,7 +22,7 @@ const Experiences = () => {
 
   const fetchExperiences = async (q = "") => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/v1/experience/getall", {
+      const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/experience/getall", {
         params: { q, page: currentPage },
         withCredentials: true,
       });
@@ -48,7 +48,7 @@ const Experiences = () => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/api/v1/experience/post",
+        "https://careerconnect-tgzi.onrender.com/api/v1/experience/post",
         { title, company, description },
         {
           withCredentials: true,
@@ -72,7 +72,7 @@ const Experiences = () => {
     setSubmittingComment(true);
     try {
       const { data } = await axios.post(
-        `http://localhost:4000/api/v1/experience/comment/${expId}`,
+        `https://careerconnect-tgzi.onrender.com/api/v1/experience/comment/${expId}`,
         { comment: commentText },
         { withCredentials: true }
       );

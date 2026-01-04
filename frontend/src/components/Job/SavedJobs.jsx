@@ -11,7 +11,7 @@ const SavedJobs = () => {
   useEffect(() => {
     const fetchSaved = async () => {
       try {
-        const { data } = await axios.get("http://localhost:4000/api/v1/job/saved", { withCredentials: true });
+        const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/job/saved", { withCredentials: true });
         if (data && data.saved) setSaved(data.saved);
       } catch (err) {
         console.error(err);

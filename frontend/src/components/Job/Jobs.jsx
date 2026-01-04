@@ -24,7 +24,7 @@ const Jobs = () => {
   const navigateTo = useNavigate();
   const fetchJobs = async (params = {}) => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/v1/job/getall", {
+      const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/job/getall", {
         params: { ...params, page: currentPage },
         withCredentials: true,
       });
@@ -41,7 +41,7 @@ const Jobs = () => {
 
   const fetchSaved = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/v1/job/saved", { withCredentials: true });
+      const res = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/job/saved", { withCredentials: true });
       if (res.data && res.data.saved) {
         setSavedIds(res.data.saved.map((j) => j._id));
       }
@@ -287,7 +287,7 @@ const Jobs = () => {
                             onClick={async () => {
                               try {
                                 const r = await axios.post(
-                                  `http://localhost:4000/api/v1/job/save/${element._id}`,
+                                  `https://careerconnect-tgzi.onrender.com/api/v1/job/save/${element._id}`,
                                   {},
                                   { withCredentials: true }
                                 );

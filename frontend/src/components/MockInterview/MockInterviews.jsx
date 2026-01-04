@@ -17,7 +17,7 @@ const MockInterviews = () => {
 
   const fetchInterviews = async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/v1/mock/my", {
+      const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/mock/my", {
         withCredentials: true,
       });
       setInterviews(data.interviews);
@@ -28,7 +28,7 @@ const MockInterviews = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const { data } = await axios.get("http://localhost:4000/api/v1/user/available-job-seekers", {
+      const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/user/available-job-seekers", {
         withCredentials: true,
       });
       setAvailableUsers(data.users);
@@ -96,7 +96,7 @@ const MockInterviews = () => {
 
   const handleToggleAvailability = async () => {
     try {
-      const { data } = await axios.put("http://localhost:4000/api/v1/user/availability", {}, {
+      const { data } = await axios.put("https://careerconnect-tgzi.onrender.com/api/v1/user/availability", {}, {
         withCredentials: true,
       });
       setIsAvailable(data.isAvailableForMockInterview);
@@ -124,7 +124,7 @@ const MockInterviews = () => {
     try {
       // Create a peer interview session
       const { data } = await axios.post(
-        "http://localhost:4000/api/v1/mock/start-peer",
+        "https://careerconnect-tgzi.onrender.com/api/v1/mock/start-peer",
         { 
           category: "Full Stack Development", // Default or ask user
           interviewType: "General",
@@ -152,7 +152,7 @@ const MockInterviews = () => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/api/v1/mock/start",
+        "https://careerconnect-tgzi.onrender.com/api/v1/mock/start",
         { category, interviewType },
         { withCredentials: true }
       );

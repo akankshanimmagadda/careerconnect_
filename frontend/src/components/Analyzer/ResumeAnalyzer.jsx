@@ -26,7 +26,7 @@ const ResumeAnalyzer = () => {
     formData.append("resume", resumeFile);
     formData.append("jobDescription", jobDescription);
     try {
-      const { data } = await axios.post("http://localhost:4000/api/v1/analyzer/resume", formData, {
+      const { data } = await axios.post("https://careerconnect-tgzi.onrender.com/api/v1/analyzer/resume", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -183,7 +183,7 @@ const ResumeAnalyzer = () => {
             {result.resumeUrl && (
               <div style={{ textAlign: "center", marginTop: "20px" }}>
                 <a
-                  href={`http://localhost:4000${result.resumeUrl}`}
+                  href={`https://careerconnect-tgzi.onrender.com${result.resumeUrl}`}
                   target="_blank"
                   rel="noreferrer"
                   className="applyLink"

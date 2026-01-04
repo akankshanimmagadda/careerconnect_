@@ -26,13 +26,13 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       if (activeTab === "stats") {
-        const { data } = await axios.get("http://localhost:4000/api/v1/user/admin/stats", { withCredentials: true });
+        const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/user/admin/stats", { withCredentials: true });
         setStats(data.stats);
       } else if (activeTab === "users") {
-        const { data } = await axios.get("http://localhost:4000/api/v1/user/admin/users", { withCredentials: true });
+        const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/user/admin/users", { withCredentials: true });
         setUsers(data.users);
       } else if (activeTab === "jobs") {
-        const { data } = await axios.get("http://localhost:4000/api/v1/job/admin/jobs", { withCredentials: true });
+        const { data } = await axios.get("https://careerconnect-tgzi.onrender.com/api/v1/job/admin/jobs", { withCredentials: true });
         setJobs(data.jobs);
       }
     } catch (error) {
@@ -44,7 +44,7 @@ const AdminDashboard = () => {
 
   const handleUpdateUserStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:4000/api/v1/user/admin/user/status/${id}`, { status }, { withCredentials: true });
+      await axios.put(`https://careerconnect-tgzi.onrender.com/api/v1/user/admin/user/status/${id}`, { status }, { withCredentials: true });
       toast.success(`User status updated to ${status}`);
       fetchData();
     } catch (error) {
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await axios.delete(`http://localhost:4000/api/v1/user/admin/user/${id}`, { withCredentials: true });
+      await axios.delete(`https://careerconnect-tgzi.onrender.com/api/v1/user/admin/user/${id}`, { withCredentials: true });
       toast.success("User deleted");
       fetchData();
     } catch (error) {
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
 
   const handleUpdateJobStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:4000/api/v1/job/admin/job/status/${id}`, { status }, { withCredentials: true });
+      await axios.put(`https://careerconnect-tgzi.onrender.com/api/v1/job/admin/job/status/${id}`, { status }, { withCredentials: true });
       toast.success(`Job status updated to ${status}`);
       fetchData();
     } catch (error) {
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
   const handleDeleteJob = async (id) => {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     try {
-      await axios.delete(`http://localhost:4000/api/v1/job/admin/job/${id}`, { withCredentials: true });
+      await axios.delete(`https://careerconnect-tgzi.onrender.com/api/v1/job/admin/job/${id}`, { withCredentials: true });
       toast.success("Job deleted");
       fetchData();
     } catch (error) {

@@ -39,17 +39,17 @@ Set the following environment variables on your hosting platform:
 ### API Configuration
 I have already created `frontend/src/config.js` to handle the API URL dynamically. 
 ```javascript
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://careerconnect-tgzi.onrender.com";
 export default API_BASE_URL;
 ```
 
 ### Update Hardcoded URLs
-You should replace all remaining instances of `http://localhost:4000` in the `frontend/src` directory with `${API_BASE_URL}`. 
+You should replace all remaining instances of `https://careerconnect-tgzi.onrender.com` in the `frontend/src` directory with `${API_BASE_URL}`. 
 
 Example:
 ```javascript
 // Before
-axios.get("http://localhost:4000/api/v1/job/getall")
+axios.get("https://careerconnect-tgzi.onrender.com/api/v1/job/getall")
 
 // After (ensure API_BASE_URL is imported)
 axios.get(`${API_BASE_URL}/api/v1/job/getall`)
