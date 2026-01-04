@@ -101,7 +101,7 @@ const Profile = () => {
       if (resumeFile) formData.append("resume", resumeFile);
 
       const { data } = await axios.put(
-        "https://careerconnect-tgzi.onrender.com/api/v1/user/update",
+        "http://localhost:4000/api/v1/user/update",
         formData,
         {
           withCredentials: true,
@@ -224,7 +224,7 @@ const Profile = () => {
                     <div className="resume-info">
                       <p>Your uploaded resume</p>
                       <a 
-                        href={user.resume.startsWith("http") ? user.resume : `https://careerconnect-tgzi.onrender.com${user.resume}`} 
+                        href={user.resume.startsWith("http") ? user.resume : `http://localhost:4000${user.resume}`} 
                         target="_blank" 
                         rel="noreferrer"
                       >

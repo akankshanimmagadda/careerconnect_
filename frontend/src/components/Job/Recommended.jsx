@@ -12,7 +12,7 @@ const Recommended = () => {
     const fetchRecs = async () => {
       try {
         const { data } = await axios.get(
-          "https://careerconnect-tgzi.onrender.com/api/v1/job/recommendations",
+          "http://localhost:4000/api/v1/job/recommendations",
           { withCredentials: true }
         );
         if (data && data.recommendations) setRecs(data.recommendations);

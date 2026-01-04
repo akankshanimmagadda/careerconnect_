@@ -1,2 +1,2 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://careerconnect-tgzi.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 export default API_BASE_URL;

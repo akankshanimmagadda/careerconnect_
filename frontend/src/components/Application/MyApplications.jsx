@@ -27,7 +27,7 @@ const MyApplications = () => {
       if (user && user.role === "Employer") {
         const delayDebounceFn = setTimeout(() => {
           axios
-            .get("https://careerconnect-tgzi.onrender.com/api/v1/application/employer/getall", {
+            .get("http://localhost:4000/api/v1/application/employer/getall", {
               params: { skills: skillFilter, experience: expFilter },
               withCredentials: true,
             })
@@ -38,7 +38,7 @@ const MyApplications = () => {
         return () => clearTimeout(delayDebounceFn);
       } else {
         axios
-          .get("https://careerconnect-tgzi.onrender.com/api/v1/application/jobseeker/getall", {
+          .get("http://localhost:4000/api/v1/application/jobseeker/getall", {
             withCredentials: true,
           })
           .then((res) => {
@@ -57,7 +57,7 @@ const MyApplications = () => {
   const deleteApplication = (id) => {
     try {
       axios
-        .delete(`https://careerconnect-tgzi.onrender.com/api/v1/application/delete/${id}`, {
+        .delete(`http://localhost:4000/api/v1/application/delete/${id}`, {
           withCredentials: true,
         })
         .then((res) => {
@@ -175,7 +175,7 @@ const MyApplications = () => {
                       onStatusChange={async (id, status, interviewDate, interviewStatus, zoomLink) => {
                         try {
                           const res = await axios.put(
-                            `https://careerconnect-tgzi.onrender.com/api/v1/application/status/${id}`,
+                            `http://localhost:4000/api/v1/application/status/${id}`,
                             { status, interviewDate, interviewStatus, zoomLink },
                             { withCredentials: true }
                           );

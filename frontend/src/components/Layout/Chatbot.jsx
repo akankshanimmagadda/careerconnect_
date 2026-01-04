@@ -37,7 +37,7 @@ const Chatbot = () => {
 
     try {
       const { data } = await axios.post(
-        "https://careerconnect-tgzi.onrender.com/api/v1/user/chat",
+        "http://localhost:4000/api/v1/user/chat",
         { messages: [...messages, userMessage] },
         {
           withCredentials: true,

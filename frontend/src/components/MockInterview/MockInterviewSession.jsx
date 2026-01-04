@@ -85,7 +85,7 @@ const MockInterviewSession = () => {
 
   const fetchInterviewDetails = async () => {
     try {
-      const { data } = await axios.get(`https://careerconnect-tgzi.onrender.com/api/v1/mock/${id}`, {
+      const { data } = await axios.get(`http://localhost:4000/api/v1/mock/${id}`, {
         withCredentials: true,
       });
       const interviewData = data.mockInterview || data.interview;
@@ -352,7 +352,7 @@ const MockInterviewSession = () => {
     setLoading(true);
     try {
       await axios.post(
-        "https://careerconnect-tgzi.onrender.com/api/v1/mock/submit",
+        "http://localhost:4000/api/v1/mock/submit",
         {
           interviewId: id,
           questionId: interview?.questions?.[currentQuestionIndex]?._id,
@@ -388,7 +388,7 @@ const MockInterviewSession = () => {
   const handleFinishInterview = async () => {
     try {
       await axios.post(
-        "https://careerconnect-tgzi.onrender.com/api/v1/mock/finish",
+        "http://localhost:4000/api/v1/mock/finish",
         { interviewId: id },
         { withCredentials: true }
       );
