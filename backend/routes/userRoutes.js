@@ -16,11 +16,12 @@ import {
 } from "../controllers/userController.js";
 import { chat } from "../controllers/chatController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
+import { loginLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 router.post("/register", register);
-router.post("/login", login);
+router.post("/login", loginLimiter, login);
 router.get("/logout", isAuthenticated, logout);
 router.get("/getuser", isAuthenticated, getUser);
 router.put("/update", isAuthenticated, updateProfile);
