@@ -10,6 +10,7 @@ import { MdOutlineWorkOutline, MdOutlinePostAdd, MdOutlineSaveAlt } from "react-
 import { TbAnalyze } from "react-icons/tb";
 import { HiOutlineClipboardList } from "react-icons/hi";
 import { RiChatSmile2Line, RiRobotLine } from "react-icons/ri";
+import { BsFileEarmarkText } from "react-icons/bs";
 import API_BASE_URL from "../../config";
 
 const Navbar = () => {
@@ -90,6 +91,11 @@ const Navbar = () => {
               <li>
                 <Link to={"/analyzer"} onClick={() => setShow(false)}>
                   <TbAnalyze /> ANALYZER
+                </Link>
+              </li>
+              <li>
+                <Link to={"/resume-prepare"} onClick={() => setShow(false)}>
+                  <BsFileEarmarkText /> RESUME
                 </Link>
               </li>
               <li>

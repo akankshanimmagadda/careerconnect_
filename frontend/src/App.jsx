@@ -30,6 +30,7 @@ const Experiences = lazy(() => import("./components/Experience/Experiences"));
 const MockInterviews = lazy(() => import("./components/MockInterview/MockInterviews"));
 const MockInterviewSession = lazy(() => import("./components/MockInterview/MockInterviewSession"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
+const ResumePrepare = lazy(() => import("./components/Resume/ResumePrepare"));
 
 const App = () => {
   const { isAuthorized, setIsAuthorized, setUser, user, setSocket, socket } = useContext(Context);
@@ -100,6 +101,7 @@ const App = () => {
           <Route path="/experiences" element={<Experiences />} />
           <Route path="/mock-interviews" element={<MockInterviews />} />
           <Route path="/mock-interview/:id" element={<MockInterviewSession />} />
+          <Route path="/resume-prepare" element={<ResumePrepare />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="*" element={<NotFound />} />

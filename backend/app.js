@@ -8,6 +8,7 @@ import applicationRouter from "./routes/applicationRoutes.js";
 import analyzerRouter from "./routes/analyzerRoutes.js";
 import experienceRouter from "./routes/experienceRoutes.js";
 import mockInterviewRouter from "./routes/mockInterviewRoutes.js";
+import resumeRouter from "./routes/resumeRoutes.js";
 import cors from "cors";
 import { errorMiddleware } from "./middlewares/error.js";
 import cookieParser from "cookie-parser";
@@ -61,6 +62,7 @@ app.use("/api/v1/application", applicationRouter);
 app.use("/api/v1/analyzer", analyzerRouter);
 app.use("/api/v1/experience", experienceRouter);
 app.use("/api/v1/mock", mockInterviewRouter);
+app.use("/api/v1/resume", resumeRouter);
 dbConnection();
 
 app.use(errorMiddleware);
