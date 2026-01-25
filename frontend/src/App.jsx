@@ -55,12 +55,19 @@ const App = () => {
 
   useEffect(() => {
     if (isAuthorized && user?._id) {
-      const newSocket = io(API_BASE_URL, {
+      // Trim the API_BASE_URL to remove any whitespace
+      const socketUrl = (API_BASE_URL || "").trim();
+      
+      const newSocket = io(socketUrl, {
         auth: {
           userId: user._id,
           name: user.name,
         },
         withCredentials: true,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
       });
       setSocket(newSocket);
 
