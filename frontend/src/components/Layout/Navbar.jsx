@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Context } from "../../main";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { AiOutlineClose, AiOutlineHome, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
@@ -19,19 +19,20 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/user/logout`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("/api/v1/user/logout");
+      // Clear token from localStorage
+      localStorage.removeItem('jobToken');
       toast.success(response.data.message);
       setIsAuthorized(false);
       setUser({});
       navigateTo("/login");
     } catch (error) {
-      toast.error(error.response.data.message);
-      setIsAuthorized(true);
+      // Clear token even if logout fails
+      localStorage.removeItem('jobToken');
+      toast.error(error.response?.data?.message || "Logout failed");
+      setIsAuthorized(false);
+      setUser({});
+      navigateTo("/login");
     }
   };
 
@@ -127,3 +128,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+

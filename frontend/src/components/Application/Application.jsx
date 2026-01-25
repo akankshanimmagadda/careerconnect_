@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../api/axios";
 import React, { useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,8 +30,7 @@ const Application = () => {
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const { data } = await axios.get(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/${id}`, {
-          withCredentials: true,
+        const { data } = await axios.get(`/api/v1/job/${id}`, {
         });
         setJob(data.job);
       } catch (error) {
@@ -108,10 +107,9 @@ const Application = () => {
 
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/application/post",
+        "/api/v1/application/post",
         formData,
         {
-          withCredentials: true,
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -314,3 +312,5 @@ const Application = () => {
 };
 
 export default Application;
+
+

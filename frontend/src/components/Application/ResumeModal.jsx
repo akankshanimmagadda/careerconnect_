@@ -1,9 +1,10 @@
 import React from "react";
+import API_BASE_URL from "../../config";
 
 const ResumeModal = ({ imageUrl, onClose }) => {
   const isPDF = imageUrl && imageUrl.toLowerCase().endsWith(".pdf");
   const fullImageUrl = imageUrl && !imageUrl.startsWith("http") 
-    ? `https://careerconnect-backend-u91w.onrender.com${imageUrl}` 
+    ? `${API_BASE_URL}${imageUrl}` 
     : imageUrl;
 
   return (
@@ -29,3 +30,5 @@ const ResumeModal = ({ imageUrl, onClose }) => {
 };
 
 export default ResumeModal;
+
+

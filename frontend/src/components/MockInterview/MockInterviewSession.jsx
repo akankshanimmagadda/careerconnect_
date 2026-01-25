@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Context } from "../../main";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -85,8 +85,7 @@ const MockInterviewSession = () => {
 
   const fetchInterviewDetails = async () => {
     try {
-      const { data } = await axios.get(`https://careerconnect-backend-u91w.onrender.com/api/v1/mock/${id}`, {
-        withCredentials: true,
+      const { data } = await axios.get(`/api/v1/mock/${id}`, {
       });
       const interviewData = data.mockInterview || data.interview;
       setInterview(interviewData);
@@ -380,7 +379,7 @@ const MockInterviewSession = () => {
     setLoading(true);
     try {
       await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/mock/submit",
+        "/api/v1/mock/submit",
         {
           interviewId: id,
           questionId: interview?.questions?.[currentQuestionIndex]?._id,
@@ -416,7 +415,7 @@ const MockInterviewSession = () => {
   const handleFinishInterview = async () => {
     try {
       await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/mock/finish",
+        "/api/v1/mock/finish",
         { interviewId: id },
         { withCredentials: true }
       );
@@ -824,3 +823,5 @@ const MockInterviewSession = () => {
 };
 
 export default MockInterviewSession;
+
+

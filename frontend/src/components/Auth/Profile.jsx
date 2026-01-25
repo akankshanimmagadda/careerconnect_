@@ -1,7 +1,8 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Context } from "../../main";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
+import API_BASE_URL from "../../config";
 import { 
   FaUser, FaEnvelope, FaPhone, FaUserTag, FaFilePdf, FaEdit, FaSave, FaTimes, 
   FaMapMarkerAlt, FaLinkedin, FaGithub, FaGlobe, FaGraduationCap, FaBriefcase, FaTools 
@@ -101,10 +102,9 @@ const Profile = () => {
       if (resumeFile) formData.append("resume", resumeFile);
 
       const { data } = await axios.put(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/update",
+        "/api/v1/user/update",
         formData,
         {
-          withCredentials: true,
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
@@ -224,7 +224,7 @@ const Profile = () => {
                     <div className="resume-info">
                       <p>Your uploaded resume</p>
                       <a 
-                        href={user.resume.startsWith("http") ? user.resume : `https://careerconnect-backend-u91w.onrender.com${user.resume}`} 
+                        href={user.resume.startsWith("http") ? user.resume : `${API_BASE_URL}${user.resume}`} 
                         target="_blank" 
                         rel="noreferrer"
                       >
@@ -342,3 +342,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
+

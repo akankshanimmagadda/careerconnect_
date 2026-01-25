@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Context } from "../../main";
 import { RiChat3Line, RiCloseLine, RiSendPlane2Line } from "react-icons/ri";
 import toast from "react-hot-toast";
@@ -37,10 +37,9 @@ const Chatbot = () => {
 
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/chat",
+        "/api/v1/user/chat",
         { messages: [...messages, userMessage] },
         {
-          withCredentials: true,
           headers: { "Content-Type": "application/json" }
         }
       );
@@ -214,3 +213,5 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+
+

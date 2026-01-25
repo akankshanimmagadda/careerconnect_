@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../api/axios";
 import React, { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaCheck } from "react-icons/fa6";
@@ -24,7 +24,7 @@ const MyJobs = () => {
     const fetchJobs = async () => {
       try {
         const { data } = await axios.get(
-          "https://careerconnect-backend-u91w.onrender.com/api/v1/job/getmyjobs",
+          "/api/v1/job/getmyjobs",
           { withCredentials: true }
         );
         setMyJobs(data.myJobs);
@@ -58,8 +58,7 @@ const MyJobs = () => {
       updatedJob.techStack = updatedJob.techStack.split(",").map(s => s.trim()).filter(s => s !== "");
     }
     await axios
-      .put(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/update/${jobId}`, updatedJob, {
-        withCredentials: true,
+      .put(`/api/v1/job/update/${jobId}`, updatedJob, {
       })
       .then((res) => {
         toast.success(res.data.message);
@@ -73,8 +72,7 @@ const MyJobs = () => {
   //Function For Deleting Job
   const handleDeleteJob = async (jobId) => {
     await axios
-      .delete(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/delete/${jobId}`, {
-        withCredentials: true,
+      .delete(`/api/v1/job/delete/${jobId}`, {
       })
       .then((res) => {
         toast.success(res.data.message);
@@ -281,3 +279,5 @@ const MyJobs = () => {
 };
 
 export default MyJobs;
+
+

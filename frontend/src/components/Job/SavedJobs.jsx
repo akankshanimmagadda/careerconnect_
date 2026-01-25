@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Context } from "../../main";
 import { Link } from "react-router-dom";
 
@@ -11,7 +11,7 @@ const SavedJobs = () => {
   useEffect(() => {
     const fetchSaved = async () => {
       try {
-        const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/job/saved", { withCredentials: true });
+        const { data } = await axios.get("/api/v1/job/saved");
         if (data && data.saved) setSaved(data.saved);
       } catch (err) {
         console.error(err);
@@ -92,3 +92,5 @@ const SavedJobs = () => {
 };
 
 export default SavedJobs;
+
+

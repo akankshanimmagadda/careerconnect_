@@ -3,7 +3,7 @@ import { MdOutlineMailOutline } from "react-icons/md";
 import { RiLock2Fill } from "react-icons/ri";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { FaRegUser } from "react-icons/fa";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
 
@@ -27,13 +27,16 @@ const NewLogin = () => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/login",
+        "/api/v1/user/login",
         { email, password, role },
         {
           headers: { "Content-Type": "application/json" },
-          withCredentials: true,
         }
       );
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('jobToken', data.token);
+      }
       toast.success(data.message);
       setUser(data.user);
       setIsAuthorized(true);
@@ -233,3 +236,5 @@ const NewLogin = () => {
 };
 
 export default NewLogin;
+
+

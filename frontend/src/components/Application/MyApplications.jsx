@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../main";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import ResumeModal from "./ResumeModal";
@@ -27,7 +27,7 @@ const MyApplications = () => {
       if (user && user.role === "Employer") {
         const delayDebounceFn = setTimeout(() => {
           axios
-            .get("https://careerconnect-backend-u91w.onrender.com/api/v1/application/employer/getall", {
+            .get("/api/v1/application/employer/getall", {
               params: { skills: skillFilter, experience: expFilter },
               withCredentials: true,
             })
@@ -38,8 +38,7 @@ const MyApplications = () => {
         return () => clearTimeout(delayDebounceFn);
       } else {
         axios
-          .get("https://careerconnect-backend-u91w.onrender.com/api/v1/application/jobseeker/getall", {
-            withCredentials: true,
+          .get("/api/v1/application/jobseeker/getall", {
           })
           .then((res) => {
             setApplications(res.data.applications);
@@ -57,8 +56,7 @@ const MyApplications = () => {
   const deleteApplication = (id) => {
     try {
       axios
-        .delete(`https://careerconnect-backend-u91w.onrender.com/api/v1/application/delete/${id}`, {
-          withCredentials: true,
+        .delete(`/api/v1/application/delete/${id}`, {
         })
         .then((res) => {
           toast.success(res.data.message);
@@ -175,7 +173,7 @@ const MyApplications = () => {
                       onStatusChange={async (id, status, interviewDate, interviewStatus, zoomLink) => {
                         try {
                           const res = await axios.put(
-                            `https://careerconnect-backend-u91w.onrender.com/api/v1/application/status/${id}`,
+                            `/api/v1/application/status/${id}`,
                             { status, interviewDate, interviewStatus, zoomLink },
                             { withCredentials: true }
                           );
@@ -367,3 +365,5 @@ const EmployerCard = ({ element, openModal, onStatusChange }) => {
     </div>
   );
 };
+
+

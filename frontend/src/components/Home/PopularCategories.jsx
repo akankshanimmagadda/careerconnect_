@@ -82,3 +82,5 @@ const PopularCategories = () => {
 };
 
 export default PopularCategories;
+
+

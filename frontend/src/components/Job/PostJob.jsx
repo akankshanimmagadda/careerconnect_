@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Context } from "../../main";
@@ -76,10 +76,9 @@ const PostJob = () => {
 
     await axios
       .post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/job/post",
+        "/api/v1/job/post",
         jobData,
         {
-          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
@@ -313,3 +312,5 @@ const PostJob = () => {
 };
 
 export default PostJob;
+
+

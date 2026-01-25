@@ -3,7 +3,7 @@ import { FaRegUser, FaPencilAlt } from "react-icons/fa";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { RiLock2Fill } from "react-icons/ri";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
 
@@ -34,7 +34,7 @@ const NewRegister = () => {
     }
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/register",
+        "/api/v1/user/register",
         { name, email, role, password },
         {
           headers: { "Content-Type": "application/json" },
@@ -265,3 +265,5 @@ const NewRegister = () => {
 };
 
 export default NewRegister;
+
+

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { MdOutlineMailOutline } from "react-icons/md";
@@ -20,7 +20,7 @@ const VerifyEmail = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/verify-email",
+        "/api/v1/user/verify-email",
         { email, otp },
         {
           headers: {
@@ -41,7 +41,7 @@ const VerifyEmail = () => {
   const handleResend = async () => {
     try {
       const res = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/resend-verification",
+        "/api/v1/user/resend-verification",
         { email }
       );
       toast.success(res.data.message);
@@ -158,3 +158,5 @@ const VerifyEmail = () => {
 };
 
 export default VerifyEmail;
+
+

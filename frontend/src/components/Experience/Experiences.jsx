@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Context } from "../../main";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -22,7 +22,7 @@ const Experiences = () => {
 
   const fetchExperiences = async (q = "") => {
     try {
-      const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/experience/getall", {
+      const { data } = await axios.get("/api/v1/experience/getall", {
         params: { q, page: currentPage },
         withCredentials: true,
       });
@@ -48,10 +48,9 @@ const Experiences = () => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/experience/post",
+        "/api/v1/experience/post",
         { title, company, description },
         {
-          withCredentials: true,
           headers: { "Content-Type": "application/json" },
         }
       );
@@ -72,7 +71,7 @@ const Experiences = () => {
     setSubmittingComment(true);
     try {
       const { data } = await axios.post(
-        `https://careerconnect-backend-u91w.onrender.com/api/v1/experience/comment/${expId}`,
+        `/api/v1/experience/comment/${expId}`,
         { comment: commentText },
         { withCredentials: true }
       );
@@ -275,3 +274,5 @@ const Experiences = () => {
 };
 
 export default Experiences;
+
+

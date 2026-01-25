@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 
 const VerifyPending = () => {
@@ -17,7 +17,7 @@ const VerifyPending = () => {
     setResending(true);
     try {
       const res = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/user/resend-verification",
+        "/api/v1/user/resend-verification",
         { email }
       );
       toast.success(res.data.message);
@@ -82,3 +82,5 @@ const VerifyPending = () => {
 };
 
 export default VerifyPending;
+
+

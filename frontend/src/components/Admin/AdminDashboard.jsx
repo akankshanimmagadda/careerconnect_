@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Context } from "../../main";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { FaUsers, FaBriefcase, FaFileAlt, FaUserShield, FaTrash, FaCheck, FaTimes, FaChartLine } from "react-icons/fa";
 
@@ -26,13 +26,13 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       if (activeTab === "stats") {
-        const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/user/admin/stats", { withCredentials: true });
+        const { data } = await axios.get("/api/v1/user/admin/stats");
         setStats(data.stats);
       } else if (activeTab === "users") {
-        const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/user/admin/users", { withCredentials: true });
+        const { data } = await axios.get("/api/v1/user/admin/users");
         setUsers(data.users);
       } else if (activeTab === "jobs") {
-        const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/job/admin/jobs", { withCredentials: true });
+        const { data } = await axios.get("/api/v1/job/admin/jobs");
         setJobs(data.jobs);
       }
     } catch (error) {
@@ -44,7 +44,7 @@ const AdminDashboard = () => {
 
   const handleUpdateUserStatus = async (id, status) => {
     try {
-      await axios.put(`https://careerconnect-backend-u91w.onrender.com/api/v1/user/admin/user/status/${id}`, { status }, { withCredentials: true });
+      await axios.put(`/api/v1/user/admin/user/status/${id}`, { status });
       toast.success(`User status updated to ${status}`);
       fetchData();
     } catch (error) {
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await axios.delete(`https://careerconnect-backend-u91w.onrender.com/api/v1/user/admin/user/${id}`, { withCredentials: true });
+      await axios.delete(`/api/v1/user/admin/user/${id}`);
       toast.success("User deleted");
       fetchData();
     } catch (error) {
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
 
   const handleUpdateJobStatus = async (id, status) => {
     try {
-      await axios.put(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/admin/job/status/${id}`, { status }, { withCredentials: true });
+      await axios.put(`/api/v1/job/admin/job/status/${id}`, { status });
       toast.success(`Job status updated to ${status}`);
       fetchData();
     } catch (error) {
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
   const handleDeleteJob = async (id) => {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     try {
-      await axios.delete(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/admin/job/${id}`, { withCredentials: true });
+      await axios.delete(`/api/v1/job/admin/job/${id}`);
       toast.success("Job deleted");
       fetchData();
     } catch (error) {
@@ -291,3 +291,5 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+

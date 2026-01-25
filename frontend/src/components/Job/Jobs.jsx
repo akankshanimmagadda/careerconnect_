@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import { Context } from "../../main";
 
@@ -24,7 +24,7 @@ const Jobs = () => {
   const navigateTo = useNavigate();
   const fetchJobs = async (params = {}) => {
     try {
-      const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/job/getall", {
+      const { data } = await axios.get("/api/v1/job/getall", {
         params: { ...params, page: currentPage },
         withCredentials: true,
       });
@@ -41,7 +41,7 @@ const Jobs = () => {
 
   const fetchSaved = async () => {
     try {
-      const res = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/job/saved", { withCredentials: true });
+      const res = await axios.get("/api/v1/job/saved");
       if (res.data && res.data.saved) {
         setSavedIds(res.data.saved.map((j) => j._id));
       }
@@ -287,7 +287,7 @@ const Jobs = () => {
                             onClick={async () => {
                               try {
                                 const r = await axios.post(
-                                  `https://careerconnect-backend-u91w.onrender.com/api/v1/job/save/${element._id}`,
+                                  `/api/v1/job/save/${element._id}`,
                                   {},
                                   { withCredentials: true }
                                 );
@@ -345,3 +345,5 @@ const Jobs = () => {
 };
 
 export default Jobs;
+
+

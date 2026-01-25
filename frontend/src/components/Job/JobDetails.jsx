@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { Context } from "../../main";
 import { 
@@ -18,16 +18,14 @@ const JobDetails = () => {
 
   useEffect(() => {
     axios
-      .get(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/${id}`, {
-        withCredentials: true,
+      .get(`/api/v1/job/${id}`, {
       })
       .then((res) => {
         setJob(res.data.job);
         // if user is job seeker, check if already applied
         if (user && user.role !== "Employer") {
           axios
-            .get(`https://careerconnect-backend-u91w.onrender.com/api/v1/application/check?jobId=${id}`, {
-              withCredentials: true,
+            .get(`/api/v1/application/check?jobId=${id}`, {
             })
             .then((r) => {
               if (r.data && r.data.applied) {
@@ -168,3 +166,5 @@ const JobDetails = () => {
 };
 
 export default JobDetails;
+
+

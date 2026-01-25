@@ -4,10 +4,21 @@ import ErrorHandler from "./error.js";
 import jwt from "jsonwebtoken";
 
 export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
-  const { token } = req.cookies;
+  // Check for token in cookies first, then in Authorization header
+  let token = req.cookies.token;
+  
+  if (!token && req.headers.authorization) {
+    // Check for Bearer token in Authorization header
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+  }
+  
   if (!token) {
     return next(new ErrorHandler("User Not Authorized", 401));
   }
+  
   const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
   req.user = await User.findById(decoded.id);

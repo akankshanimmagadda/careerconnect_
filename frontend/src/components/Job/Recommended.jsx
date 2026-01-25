@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Link } from "react-router-dom";
 import { Context } from "../../main";
 
@@ -12,7 +12,7 @@ const Recommended = () => {
     const fetchRecs = async () => {
       try {
         const { data } = await axios.get(
-          "https://careerconnect-backend-u91w.onrender.com/api/v1/job/recommendations",
+          "/api/v1/job/recommendations",
           { withCredentials: true }
         );
         if (data && data.recommendations) setRecs(data.recommendations);
@@ -110,3 +110,5 @@ const Recommended = () => {
 };
 
 export default Recommended;
+
+

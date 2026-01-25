@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import { Context } from "../../main";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -17,8 +17,7 @@ const MockInterviews = () => {
 
   const fetchInterviews = async () => {
     try {
-      const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/mock/my", {
-        withCredentials: true,
+      const { data } = await axios.get("/api/v1/mock/my", {
       });
       setInterviews(data.interviews);
     } catch (error) {
@@ -28,8 +27,7 @@ const MockInterviews = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const { data } = await axios.get("https://careerconnect-backend-u91w.onrender.com/api/v1/user/available-job-seekers", {
-        withCredentials: true,
+      const { data } = await axios.get("/api/v1/user/available-job-seekers", {
       });
       setAvailableUsers(data.users);
     } catch (error) {
@@ -96,8 +94,7 @@ const MockInterviews = () => {
 
   const handleToggleAvailability = async () => {
     try {
-      const { data } = await axios.put("https://careerconnect-backend-u91w.onrender.com/api/v1/user/availability", {}, {
-        withCredentials: true,
+      const { data } = await axios.put("/api/v1/user/availability", {}, {
       });
       setIsAvailable(data.isAvailableForMockInterview);
       toast.success(data.message);
@@ -124,7 +121,7 @@ const MockInterviews = () => {
     try {
       // Create a peer interview session
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/mock/start-peer",
+        "/api/v1/mock/start-peer",
         { 
           category: "Full Stack Development", // Default or ask user
           interviewType: "General",
@@ -160,7 +157,7 @@ const MockInterviews = () => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        "https://careerconnect-backend-u91w.onrender.com/api/v1/mock/start",
+        "/api/v1/mock/start",
         { category, interviewType },
         { withCredentials: true }
       );
@@ -302,3 +299,5 @@ const MockInterviews = () => {
 };
 
 export default MockInterviews;
+
+

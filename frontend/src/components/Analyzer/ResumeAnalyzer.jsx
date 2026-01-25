@@ -1,8 +1,9 @@
 import React, { useState, useContext, useEffect } from "react";
-import axios from "axios";
+import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../../config";
 
 const ResumeAnalyzer = () => {
   const [jobDescription, setJobDescription] = useState("");
@@ -26,8 +27,7 @@ const ResumeAnalyzer = () => {
     formData.append("resume", resumeFile);
     formData.append("jobDescription", jobDescription);
     try {
-      const { data } = await axios.post("https://careerconnect-backend-u91w.onrender.com/api/v1/analyzer/resume", formData, {
-        withCredentials: true,
+      const { data } = await axios.post("/api/v1/analyzer/resume", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(data);
@@ -183,7 +183,7 @@ const ResumeAnalyzer = () => {
             {result.resumeUrl && (
               <div style={{ textAlign: "center", marginTop: "20px" }}>
                 <a
-                  href={`https://careerconnect-backend-u91w.onrender.com${result.resumeUrl}`}
+                  href={`${API_BASE_URL}${result.resumeUrl}`}
                   target="_blank"
                   rel="noreferrer"
                   className="applyLink"
@@ -200,3 +200,5 @@ const ResumeAnalyzer = () => {
 };
 
 export default ResumeAnalyzer;
+
+
