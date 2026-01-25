@@ -76,7 +76,7 @@ const PostJob = () => {
 
     await axios
       .post(
-        "http://localhost:4000/api/v1/job/post",
+        "https://careerconnect-backend-u91w.onrender.com/api/v1/job/post",
         jobData,
         {
           withCredentials: true,

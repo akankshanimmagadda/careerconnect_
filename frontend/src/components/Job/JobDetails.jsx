@@ -18,7 +18,7 @@ const JobDetails = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:4000/api/v1/job/${id}`, {
+      .get(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/${id}`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -26,7 +26,7 @@ const JobDetails = () => {
         // if user is job seeker, check if already applied
         if (user && user.role !== "Employer") {
           axios
-            .get(`http://localhost:4000/api/v1/application/check?jobId=${id}`, {
+            .get(`https://careerconnect-backend-u91w.onrender.com/api/v1/application/check?jobId=${id}`, {
               withCredentials: true,
             })
             .then((r) => {

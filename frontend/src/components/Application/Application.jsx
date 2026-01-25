@@ -30,7 +30,7 @@ const Application = () => {
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:4000/api/v1/job/${id}`, {
+        const { data } = await axios.get(`https://careerconnect-backend-u91w.onrender.com/api/v1/job/${id}`, {
           withCredentials: true,
         });
         setJob(data.job);
@@ -108,7 +108,7 @@ const Application = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:4000/api/v1/application/post",
+        "https://careerconnect-backend-u91w.onrender.com/api/v1/application/post",
         formData,
         {
           withCredentials: true,

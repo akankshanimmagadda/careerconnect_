@@ -3,7 +3,7 @@ import React from "react";
 const ResumeModal = ({ imageUrl, onClose }) => {
   const isPDF = imageUrl && imageUrl.toLowerCase().endsWith(".pdf");
   const fullImageUrl = imageUrl && !imageUrl.startsWith("http") 
-    ? `http://localhost:4000${imageUrl}` 
+    ? `https://careerconnect-backend-u91w.onrender.com${imageUrl}` 
     : imageUrl;
 
   return (
