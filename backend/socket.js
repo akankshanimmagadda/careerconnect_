@@ -2,9 +2,24 @@ import { Server } from "socket.io";
 import { User } from "./models/userSchema.js";
 
 export const setupSocket = (server) => {
+  // Parse multiple frontend URLs from environment
+  const frontendUrls = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean);
+
+  // Fallback origins for development and production
+  const fallbackOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://careerconnectjobportal.vercel.app",
+  ];
+
+  const allowedOrigins = Array.from(new Set([...frontendUrls, ...fallbackOrigins]));
+
   const io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      origin: allowedOrigins,
       credentials: true,
     },
   });
