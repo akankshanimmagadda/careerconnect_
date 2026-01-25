@@ -133,13 +133,21 @@ const MockInterviews = () => {
         { withCredentials: true }
       );
 
+      const interviewId = data.mockInterview._id;
+
       socket.emit("accept-interview-request", {
         senderId,
-        interviewId: data.mockInterview._id
+        interviewId
       });
+
+      // Navigate accepting user to interview with a small delay to ensure socket is ready
+      setTimeout(() => {
+        navigateTo(`/mock-interview/${interviewId}`);
+      }, 500);
 
       toast.success("Connecting...");
     } catch (error) {
+      console.error(error);
       toast.error("Failed to start peer interview");
     } finally {
       setLoading(false);

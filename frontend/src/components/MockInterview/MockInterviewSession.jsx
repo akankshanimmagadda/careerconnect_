@@ -128,28 +128,56 @@ const MockInterviewSession = () => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    const peer = new Peer();
+    const peer = new Peer({
+      config: {
+        iceServers: [
+          { urls: ["stun:stun.l.google.com:19302"] },
+          { urls: ["stun:stun1.l.google.com:19302"] }
+        ]
+      }
+    });
     peerRef.current = peer;
 
     peer.on("open", (peerId) => {
+      console.log("PeerJS connected with ID:", peerId);
       socketRef.current.emit("join-interview", { interviewId: id, peerId });
+    });
+
+    peer.on("error", (err) => {
+      console.error("PeerJS error:", err);
+      toast.error("Connection error. Please refresh and try again.");
     });
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
       setMyStream(stream);
+      console.log("Local stream acquired");
       
       peer.on("call", (call) => {
+        console.log("Incoming call received");
         call.answer(stream);
         call.on("stream", (userRemoteStream) => {
+          console.log("Remote stream received on answer");
           setRemoteStream(userRemoteStream);
+        });
+        call.on("error", (err) => {
+          console.error("Call error:", err);
         });
       });
 
-      socketRef.current.on("user-connected", ({ peerId, userId }) => {
-        const call = peer.call(peerId, stream);
-        call.on("stream", (userRemoteStream) => {
-          setRemoteStream(userRemoteStream);
-        });
+      socketRef.current.on("user-connected", ({ peerId: remotePeerId, userId }) => {
+        console.log("User connected event - Remote PeerID:", remotePeerId);
+        if (remotePeerId && remotePeerId !== peer.id) {
+          const call = peer.call(remotePeerId, stream);
+          console.log("Initiating call to peer:", remotePeerId);
+          call.on("stream", (userRemoteStream) => {
+            console.log("Remote stream received on call");
+            setRemoteStream(userRemoteStream);
+          });
+          call.on("error", (err) => {
+            console.error("Call error:", err);
+            toast.error("Failed to establish peer connection");
+          });
+        }
       });
     }).catch(err => {
       console.error("Failed to get local stream", err);

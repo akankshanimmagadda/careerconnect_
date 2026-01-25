@@ -23,6 +23,9 @@ export const setupSocket = (server) => {
     socket.join(userId);
     console.log(`User ${name} (${userId}) connected and joined personal room`);
 
+    // Store interview room info for this socket
+    const userInterviewRooms = {};
+
     /* ===============================
        SEND INTERVIEW REQUEST
     =============================== */
@@ -39,6 +42,8 @@ export const setupSocket = (server) => {
     =============================== */
     socket.on("accept-interview-request", ({ senderId, interviewId }) => {
       console.log(`Interview request accepted by ${socket.userName} for session ${interviewId}`);
+      
+      userInterviewRooms[interviewId] = true;
       
       // Notify the sender that their request was accepted
       io.to(senderId).emit("interview-request-accepted", {
@@ -67,12 +72,35 @@ export const setupSocket = (server) => {
     socket.on("join-interview", ({ interviewId, peerId }) => {
       socket.join(interviewId);
       socket.peerId = peerId;
-      console.log(`User ${socket.userName} joined interview room ${interviewId} with peerId ${peerId}`);
+      userInterviewRooms[interviewId] = true;
+      
+      console.log(`User ${socket.userName} (${socket.userId}) joined interview room ${interviewId} with peerId ${peerId}`);
 
+      // Broadcast to other users in the same room
+      const connectedUsers = [];
+      for (const roomSocket of io.sockets.sockets.get(interviewId) || []) {
+        if (roomSocket.id !== socket.id) {
+          connectedUsers.push({
+            peerId: roomSocket.peerId,
+            userId: roomSocket.userId,
+            userName: roomSocket.userName
+          });
+        }
+      }
+
+      console.log(`Broadcasting user-connected to room ${interviewId}. Connected users:`, connectedUsers);
+
+      // Notify all other users in the room about this user
       socket.to(interviewId).emit("user-connected", {
         peerId,
         userId,
+        userName: name,
       });
+
+      // Optionally send back info about already connected users
+      if (connectedUsers.length > 0) {
+        socket.emit("existing-users", connectedUsers);
+      }
     });
 
     /* ===============================
