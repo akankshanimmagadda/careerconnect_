@@ -16,12 +16,29 @@ import path from "path";
 import expressStatic from "express";
 
 const app = express();
-console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+// Allow common dev/prod frontends if env is missing
+const fallbackOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://careerconnectjobportal.vercel.app",
+];
+
+const originWhitelist = Array.from(new Set([...allowedOrigins, ...fallbackOrigins]));
 
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL],
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    origin: (origin, callback) => {
+      if (!origin || originWhitelist.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     credentials: true,
   })
 );
