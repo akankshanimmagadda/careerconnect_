@@ -12,6 +12,7 @@ const MyApplications = () => {
   const [resumeImageUrl, setResumeImageUrl] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [expFilter, setExpFilter] = useState("");
+  const [aiSort, setAiSort] = useState(true);
 
   const { isAuthorized } = useContext(Context);
   const navigateTo = useNavigate();
@@ -28,7 +29,7 @@ const MyApplications = () => {
         const delayDebounceFn = setTimeout(() => {
           axios
             .get("/api/v1/application/employer/getall", {
-              params: { skills: skillFilter, experience: expFilter },
+              params: { skills: skillFilter, experience: expFilter, aiSort },
               withCredentials: true,
             })
             .then((res) => {
@@ -47,7 +48,7 @@ const MyApplications = () => {
     } catch (error) {
       toast.error(error.response.data.message);
     }
-  }, [isAuthorized, skillFilter, expFilter]);
+  }, [isAuthorized, skillFilter, expFilter, aiSort]);
 
   if (!isAuthorized) {
     navigateTo("/");
@@ -114,6 +115,14 @@ const MyApplications = () => {
                 value={expFilter}
                 onChange={(e) => setExpFilter(e.target.value)}
               />
+              <button
+                type="button"
+                className="view-btn"
+                style={{ margin: 0, whiteSpace: "nowrap", padding: "0 16px" }}
+                onClick={() => setAiSort((prev) => !prev)}
+              >
+                {aiSort ? "✨ AI Sort: ON" : "AI Sort: OFF"}
+              </button>
             </div>
           )}
         </div>
@@ -290,6 +299,18 @@ const EmployerCard = ({ element, openModal, onStatusChange }) => {
         <div className="role-info">
           <h3>{element.name}</h3>
           <p>📧 {element.email}</p>
+          {element.aiScore !== undefined && element.aiScore !== null && (
+            <div style={{ display: "flex", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
+              <span className="priority-badge low" style={{ background: "#dbeafe", color: "#1d4ed8" }}>
+                AI Score: {element.aiScore}
+              </span>
+              {element.aiRecommendation && (
+                <span className="priority-badge low" style={{ background: "#dcfce7", color: "#166534" }}>
+                  {element.aiRecommendation}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <span className={`status-badge ${statusClass}`}>
           {element.status || "Applied"}
@@ -308,6 +329,12 @@ const EmployerCard = ({ element, openModal, onStatusChange }) => {
           <strong>Cover Letter:</strong>
           <p>{element.coverLetter}</p>
         </div>
+        {element.aiReason && (
+          <div style={{ marginTop: "10px", padding: "10px", background: "#f8fafc", borderRadius: "8px", borderLeft: "3px solid #3b82f6" }}>
+            <strong style={{ fontSize: "0.85rem", color: "#1d4ed8" }}>AI Insight:</strong>
+            <p style={{ margin: "6px 0 0 0", fontSize: "0.85rem", color: "#334155" }}>{element.aiReason}</p>
+          </div>
+        )}
       </div>
       <div className="card-footer">
         <div className="resume-link" onClick={() => openModal(element.resume.url)}>

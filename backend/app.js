@@ -1,6 +1,14 @@
 import express from "express";
 import { config } from "dotenv";
-config({ path: "./.env" });
+import fs from "fs";
+import path from "path";
+
+const envCandidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "..", ".env"),
+];
+const envPath = envCandidates.find((candidate) => fs.existsSync(candidate));
+config(envPath ? { path: envPath } : undefined);
 import dbConnection  from "./database/dbConnection.js";
 import jobRouter from "./routes/jobRoutes.js";
 import userRouter from "./routes/userRoutes.js";
@@ -13,7 +21,6 @@ import cors from "cors";
 import { errorMiddleware } from "./middlewares/error.js";
 import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload";
-import path from "path";
 import expressStatic from "express";
 
 const app = express();

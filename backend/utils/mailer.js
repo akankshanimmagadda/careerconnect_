@@ -3,9 +3,30 @@ import nodemailer from "nodemailer";
 let transporter;
 let usingTestAccount = false;
 
+const normalizeAppPassword = (value = "") => value.replace(/\s+/g, "").trim();
+
+const resolveFromAddress = () => {
+  const rawFrom = (process.env.SMTP_FROM || "").trim();
+  const fallback = (process.env.SMTP_USER || "").trim();
+
+  if (!rawFrom) return fallback || undefined;
+
+  const fromLooksLikeMailbox = rawFrom.includes("<") && rawFrom.includes(">");
+  const fromLooksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawFrom);
+
+  if (fromLooksLikeMailbox || fromLooksLikeEmail) return rawFrom;
+
+  return fallback || undefined;
+};
+
 const createTransporter = async () => {
+  const hasSmtpConfig =
+    Boolean(process.env.SMTP_HOST) &&
+    Boolean(process.env.SMTP_USER) &&
+    Boolean(process.env.SMTP_PASS);
+
   // Prefer explicit SMTP config from env
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  if (hasSmtpConfig) {
     console.log("[MAILER] Creating SMTP transporter with Gmail credentials");
     try {
       transporter = nodemailer.createTransport({
@@ -14,7 +35,7 @@ const createTransporter = async () => {
         secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS.trim(), // Remove any whitespace
+          pass: normalizeAppPassword(process.env.SMTP_PASS),
         },
       });
       
@@ -25,12 +46,11 @@ const createTransporter = async () => {
       return transporter;
     } catch (err) {
       console.error("[MAILER] SMTP connection failed:", err.message);
-      console.warn("[MAILER] Falling back to Ethereal test account");
-      // Fall through to Ethereal
+      throw new Error("SMTP verification failed. Check SMTP_HOST/PORT/USER/PASS settings.");
     }
   }
 
-  // Fallback: create an Ethereal test account for development
+  // Fallback: create an Ethereal test account only when SMTP config is absent
   try {
     const testAccount = await nodemailer.createTestAccount();
     transporter = nodemailer.createTransport({
@@ -54,7 +74,11 @@ const createTransporter = async () => {
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
     if (!transporter) await createTransporter();
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER || (usingTestAccount ? "no-reply@jobportal.test" : undefined);
+    const from = resolveFromAddress() || (usingTestAccount ? "no-reply@jobportal.test" : undefined);
+
+    if (!to) {
+      throw new Error("Recipient email is missing");
+    }
     
     console.log(`[EMAIL] Sending to ${to} from ${from}`);
     const info = await transporter.sendMail({ from, to, subject, text, html });

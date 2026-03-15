@@ -5,6 +5,7 @@ import { Job } from "../models/jobSchema.js";
 import cloudinary from "cloudinary";
 import { sendEmail } from "../utils/mailer.js";
 import { applicationConfirmationTemplate, statusUpdateTemplate, interviewNotificationTemplate } from "../utils/emailTemplates.js";
+import { rankApplicantsWithAI } from "../services/aiService.js";
 
 export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const { role } = req.user;
@@ -145,12 +146,12 @@ export const employerGetAllApplications = catchAsyncErrors(
       );
     }
     const { _id } = req.user;
-    const { skills, experience } = req.query;
+    const { skills, experience, aiSort } = req.query;
     
     let query = { "employerID.user": _id };
     
     const applications = await Application.find(query)
-      .populate('job', 'title companyName')
+      .populate('job', 'title companyName description qualifications responsibilities techStack category experienceLevel')
       .populate({
         path: 'applicantID.user',
         select: 'skills experience education bio'
@@ -176,9 +177,43 @@ export const employerGetAllApplications = catchAsyncErrors(
       });
     }
 
+    let finalApplications = filteredApplications;
+
+    if (String(aiSort) === "true" && filteredApplications.length > 0) {
+      const groupedByJob = filteredApplications.reduce((acc, app) => {
+        const key = String(app.job?._id || app.job || "unknown");
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(app);
+        return acc;
+      }, {});
+
+      const rankedAll = [];
+      for (const jobApps of Object.values(groupedByJob)) {
+        const job = jobApps[0]?.job || {};
+        const rankings = await rankApplicantsWithAI(job, jobApps);
+        const rankingMap = new Map(rankings.map((rank) => [String(rank.applicationId), rank]));
+
+        const enriched = jobApps.map((app) => {
+          const rank = rankingMap.get(String(app._id));
+          return {
+            ...app.toObject(),
+            aiScore: rank?.score ?? null,
+            aiRecommendation: rank?.recommendation ?? null,
+            aiReason: rank?.reason ?? null,
+          };
+        });
+
+        enriched.sort((a, b) => (b.aiScore ?? -1) - (a.aiScore ?? -1));
+        rankedAll.push(...enriched);
+      }
+
+      finalApplications = rankedAll;
+    }
+
     res.status(200).json({
       success: true,
-      applications: filteredApplications,
+      applications: finalApplications,
+      aiSorted: String(aiSort) === "true",
     });
   }
 );

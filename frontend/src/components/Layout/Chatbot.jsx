@@ -52,6 +52,13 @@ const Chatbot = () => {
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Failed to get response from AI";
       toast.error(errorMessage);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: errorMessage,
+        },
+      ]);
       console.error(error);
     } finally {
       setLoading(false);

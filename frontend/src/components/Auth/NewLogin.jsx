@@ -88,7 +88,7 @@ const NewLogin = () => {
         overflowY: "auto"
       }}>
         <div className="header" style={{ textAlign: "center", marginBottom: "25px" }}>
-          <img src="/careerconnect-white.png" alt="logo" style={{ width: "150px", marginBottom: "15px", filter: "invert(1) brightness(0.2)" }} />
+            <img src="/careerconnect-white.png" alt="logo" style={{ width: "150px", marginBottom: "15px" }} />
           <h3 style={{ fontSize: "24px", color: "#0f172a", fontWeight: "800", marginBottom: "8px", letterSpacing: "-0.5px" }}>Welcome Back</h3>
           <p style={{ color: "#475569", fontSize: "14px", fontWeight: "500" }}>Login to your dashboard</p>
         </div>

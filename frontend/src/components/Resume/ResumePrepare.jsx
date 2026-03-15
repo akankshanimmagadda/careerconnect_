@@ -127,7 +127,28 @@ Degree in Major \\hfill GPA: X.XX/4.00
       setLogs(["Compilation successful!"]);
     } catch (error) {
       console.error("Compilation error:", error);
-      const errorMessage = error.response?.data?.message || "Compilation failed";
+      let errorMessage = "Compilation failed";
+
+      try {
+        if (error?.response?.data instanceof Blob) {
+          const text = await error.response.data.text();
+          try {
+            const parsed = JSON.parse(text);
+            errorMessage = parsed?.message || text || errorMessage;
+          } catch {
+            errorMessage = text || errorMessage;
+          }
+        } else if (typeof error?.response?.data === "string") {
+          errorMessage = error.response.data;
+        } else if (error?.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+      } catch {
+        errorMessage = error?.message || errorMessage;
+      }
+
       toast.error(errorMessage);
       setLogs([
         "Compilation failed!",

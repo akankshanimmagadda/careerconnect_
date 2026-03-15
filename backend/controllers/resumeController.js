@@ -12,6 +12,22 @@ const execPromise = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const compileWithLatexOnline = async (latexCode) => {
+  const endpoint = `https://latexonline.cc/compile?text=${encodeURIComponent(latexCode)}&command=pdflatex&force=true`;
+  const response = await fetch(endpoint, { method: "GET" });
+  const rawBody = Buffer.from(await response.arrayBuffer());
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!response.ok || !contentType.includes("application/pdf")) {
+    const bodyText = rawBody.toString("utf-8");
+    const error = new Error(bodyText || `Latex.Online failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  return rawBody;
+};
+
 // Compile LaTeX to PDF - Try local first, fallback to online
 export const compileLatex = catchAsyncErrors(async (req, res, next) => {
   const { latexCode } = req.body;
@@ -20,29 +36,20 @@ export const compileLatex = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("LaTeX code is required", 400));
   }
 
-  // Try to use online service first (more reliable)
+  // Try to use online service first (more reliable in environments without local pdflatex)
   try {
-    // Using LaTeX.Online API (public service)
-    const formData = new URLSearchParams();
-    formData.append('filecontents[]', latexCode);
-    formData.append('filename[]', 'resume.tex');
-    
-    const response = await fetch("https://latexonline.cc/compile?command=pdflatex", {
-      method: "POST",
-      body: formData,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-
-    if (response.ok) {
-      const pdfBuffer = await response.arrayBuffer();
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", "inline; filename=resume.pdf");
-      return res.send(Buffer.from(pdfBuffer));
-    }
+    const pdfBuffer = await compileWithLatexOnline(latexCode);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline; filename=resume.pdf");
+    return res.send(pdfBuffer);
   } catch (onlineError) {
+    const status = Number(onlineError?.status || 0);
+    const onlineMessage = onlineError?.message || "Online LaTeX compilation failed";
+
+    if (status >= 400 && status < 500) {
+      return next(new ErrorHandler(onlineMessage, 400));
+    }
+
     console.error("Online LaTeX compilation failed, trying local:", onlineError);
   }
 
@@ -71,6 +78,21 @@ export const compileLatex = catchAsyncErrors(async (req, res, next) => {
       const pdfExists = await fs.access(pdfFilePath).then(() => true).catch(() => false);
       
       if (!pdfExists) {
+        const stderrText = `${execError?.stderr || ""} ${execError?.message || ""}`.toLowerCase();
+        const compilerMissing =
+          execError?.code === "ENOENT" ||
+          stderrText.includes("not recognized") ||
+          stderrText.includes("command not found");
+
+        if (compilerMissing) {
+          return next(
+            new ErrorHandler(
+              "LaTeX compiler is not available on the server. Please install TeX (e.g., MiKTeX/TeX Live) or use the online compiler endpoint.",
+              503
+            )
+          );
+        }
+
         // Read the log file for error details
         const logFilePath = path.join(tempDir, "resume.log");
         let errorDetails = "LaTeX compilation failed. Please check your LaTeX syntax.";
@@ -120,32 +142,14 @@ export const compileLatexOnline = catchAsyncErrors(async (req, res, next) => {
   }
 
   try {
-    // Using LaTeX.Online API
-    const formData = new URLSearchParams();
-    formData.append('filecontents[]', latexCode);
-    formData.append('filename[]', 'resume.tex');
-    
-    const response = await fetch("https://latexonline.cc/compile?command=pdflatex", {
-      method: "POST",
-      body: formData,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      timeout: 30000,
-    });
-
-    if (!response.ok) {
-      return next(new ErrorHandler("Failed to compile LaTeX code. Please check your syntax.", 500));
-    }
-
-    const pdfBuffer = await response.arrayBuffer();
+    const pdfBuffer = await compileWithLatexOnline(latexCode);
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "inline; filename=resume.pdf");
-    res.send(Buffer.from(pdfBuffer));
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error("Online LaTeX compilation error:", error);
-    return next(new ErrorHandler("Failed to compile LaTeX code using online service. Please check your syntax and try again.", 500));
+    return next(new ErrorHandler(error.message || "Failed to compile LaTeX code using online service. Please check your syntax and try again.", 500));
   }
 });

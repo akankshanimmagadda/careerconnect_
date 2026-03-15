@@ -11,6 +11,8 @@ import { Job } from "../models/jobSchema.js";
 
 export const register = catchAsyncErrors(async (req, res, next) => {
   let { name, email, password, role } = req.body;
+  if (typeof email === "string") email = email.trim().toLowerCase();
+  if (typeof name === "string") name = name.trim();
   if (!name || !email || !password || !role) {
     return next(new ErrorHandler("Please fill full form!", 400));
   }
@@ -64,7 +66,8 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     });
   } catch (mailErr) {
     console.error("Failed to send verification email:", mailErr.message);
-    // We still created the user, they can request a resend later
+    await User.findByIdAndDelete(user._id);
+    return next(new ErrorHandler("Unable to send verification email right now. Please try again.", 500));
   }
 
   res.status(201).json({
@@ -115,7 +118,8 @@ export const logout = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const verifyEmail = catchAsyncErrors(async (req, res, next) => {
-  const { email, otp } = req.body;
+  const { otp } = req.body;
+  const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : req.body.email;
   
   if (!email || !otp) {
     return next(new ErrorHandler("Please provide email and OTP.", 400));
@@ -148,7 +152,7 @@ export const verifyEmail = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const resendVerificationEmail = catchAsyncErrors(async (req, res, next) => {
-  const { email } = req.body;
+  const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : req.body.email;
   if (!email) return next(new ErrorHandler("Please provide email", 400));
   
   const user = await User.findOne({ email });
@@ -180,6 +184,7 @@ export const resendVerificationEmail = catchAsyncErrors(async (req, res, next) =
     });
   } catch (mailErr) {
     console.error("Failed to send verification email:", mailErr.message);
+    return next(new ErrorHandler("Failed to send verification email. Please try again.", 500));
   }
   
   res.status(200).json({ success: true, message: "Verification code sent. Please check your inbox." });
