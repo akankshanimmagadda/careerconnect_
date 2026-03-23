@@ -2,12 +2,11 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { User } from "../models/userSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 import { sendToken } from "../utils/jwtToken.js";
-import path from "path";
-import fs from "fs";
 import crypto from "crypto";
 import { sendEmail } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { Job } from "../models/jobSchema.js";
+import cloudinary from "cloudinary";
 
 export const register = catchAsyncErrors(async (req, res, next) => {
   let { name, email, password, role } = req.body;
@@ -258,12 +257,19 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     if (!allowedFormats.includes(resume.mimetype)) {
       return next(new ErrorHandler("Invalid file type. Please upload a PDF or DOCX file.", 400));
     }
-    const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-    const filename = `${Date.now()}_${resume.name}`;
-    const savePath = path.join(uploadsDir, filename);
-    await resume.mv(savePath);
-    user.resume = `/uploads/${filename}`;
+
+    const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, {
+      folder: "careerconnect/resumes",
+      resource_type: "raw",
+      use_filename: true,
+      unique_filename: true,
+    });
+
+    if (!cloudinaryResponse || cloudinaryResponse.error) {
+      return next(new ErrorHandler("Failed to upload resume. Please try again.", 500));
+    }
+
+    user.resume = cloudinaryResponse.secure_url;
   }
 
   await user.save({ validateBeforeSave: false });
