@@ -74,6 +74,10 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Job not found!", 404));
   }
 
+  if (jobDetails.status !== "Approved" || jobDetails.expired) {
+    return next(new ErrorHandler("This job is not open for applications right now.", 400));
+  }
+
   // Check applicant limit
   if (jobDetails.applicantLimit > 0 && jobDetails.applicantsCount >= jobDetails.applicantLimit) {
     return next(new ErrorHandler("This job has reached its applicant limit and is now closed.", 400));

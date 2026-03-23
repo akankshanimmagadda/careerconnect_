@@ -106,7 +106,7 @@ export const recommendJobs = catchAsyncErrors(async (req, res, next) => {
   ].join(" ");
 
   // fetch jobs (limit to reasonable number)
-  const internalJobs = await Job.find({ expired: false }).limit(200).lean();
+  const internalJobs = await Job.find({ expired: false, status: "Approved" }).limit(200).lean();
 
   // Scrape external jobs based on user's past titles or structured resume titles
   let externalJobs = [];

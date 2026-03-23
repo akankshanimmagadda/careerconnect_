@@ -29,6 +29,9 @@ const MockInterviewSession = () => {
   const [output, setOutput] = useState("");
   const [testResults, setTestResults] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationParticles, setCelebrationParticles] = useState([]);
+  const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
   const [userFeedback, setUserFeedback] = useState("");
   const [rating, setRating] = useState(5);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -37,12 +40,54 @@ const MockInterviewSession = () => {
 
   const socketRef = useRef();
   const peerRef = useRef();
+  const peerIdRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const hasJoinedRoomRef = useRef(false);
+  const activeCallsRef = useRef({});
+  const tabSwitchWarningsRef = useRef(0);
+  const lastViolationAtRef = useRef(0);
+  const isEndingInterviewRef = useRef(false);
   const myMainVideoRef = useRef();
   const mySideVideoRef = useRef();
   const remoteMainVideoRef = useRef();
   const remoteSideVideoRef = useRef();
 
   const isFinished = interview?.status === "Completed";
+  const MAX_TAB_SWITCH_WARNINGS = 2;
+
+  const joinInterviewRoom = () => {
+    if (!socketRef.current || !peerIdRef.current || !localStreamRef.current || hasJoinedRoomRef.current) return;
+    socketRef.current.emit("join-interview", { interviewId: id, peerId: peerIdRef.current });
+    hasJoinedRoomRef.current = true;
+  };
+
+  const registerCall = (remotePeerId, call) => {
+    activeCallsRef.current[remotePeerId] = call;
+
+    call.on("stream", (userRemoteStream) => {
+      console.log("Remote stream received:", remotePeerId);
+      setRemoteStream(userRemoteStream);
+    });
+
+    call.on("close", () => {
+      delete activeCallsRef.current[remotePeerId];
+    });
+
+    call.on("error", (err) => {
+      console.error("Call error:", err);
+      delete activeCallsRef.current[remotePeerId];
+    });
+  };
+
+  const callRemotePeer = (remotePeerId) => {
+    if (!remotePeerId || !peerRef.current || !localStreamRef.current) return;
+    if (remotePeerId === peerIdRef.current) return;
+    if (activeCallsRef.current[remotePeerId]) return;
+
+    console.log("Initiating call to peer:", remotePeerId);
+    const call = peerRef.current.call(remotePeerId, localStreamRef.current);
+    registerCall(remotePeerId, call);
+  };
 
   const stopAllMedia = () => {
     // Stop local camera & mic
@@ -52,6 +97,7 @@ const MockInterviewSession = () => {
       });
       setMyStream(null);
     }
+    localStreamRef.current = null;
 
     // Stop remote stream reference
     if (remoteStream) {
@@ -69,12 +115,17 @@ const MockInterviewSession = () => {
       peerRef.current.destroy();
       peerRef.current = null;
     }
+    peerIdRef.current = null;
+    hasJoinedRoomRef.current = false;
+    Object.values(activeCallsRef.current).forEach((call) => call?.close?.());
+    activeCallsRef.current = {};
 
     // Don't disconnect global socket
     if (socketRef.current) {
       socketRef.current.off("code-update");
       socketRef.current.off("receive-message");
       socketRef.current.off("user-connected");
+      socketRef.current.off("existing-users");
     }
 
     // Exit fullscreen if active
@@ -137,9 +188,24 @@ const MockInterviewSession = () => {
     });
     peerRef.current = peer;
 
+    const handleUserConnected = ({ peerId: remotePeerId }) => {
+      console.log("User connected event - Remote PeerID:", remotePeerId);
+      callRemotePeer(remotePeerId);
+    };
+
+    const handleExistingUsers = (users = []) => {
+      users.forEach((existingUser) => {
+        callRemotePeer(existingUser?.peerId);
+      });
+    };
+
+    socketRef.current.on("user-connected", handleUserConnected);
+    socketRef.current.on("existing-users", handleExistingUsers);
+
     peer.on("open", (peerId) => {
       console.log("PeerJS connected with ID:", peerId);
-      socketRef.current.emit("join-interview", { interviewId: id, peerId });
+      peerIdRef.current = peerId;
+      joinInterviewRoom();
     });
 
     peer.on("error", (err) => {
@@ -149,34 +215,14 @@ const MockInterviewSession = () => {
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
       setMyStream(stream);
+      localStreamRef.current = stream;
       console.log("Local stream acquired");
+      joinInterviewRoom();
       
       peer.on("call", (call) => {
         console.log("Incoming call received");
         call.answer(stream);
-        call.on("stream", (userRemoteStream) => {
-          console.log("Remote stream received on answer");
-          setRemoteStream(userRemoteStream);
-        });
-        call.on("error", (err) => {
-          console.error("Call error:", err);
-        });
-      });
-
-      socketRef.current.on("user-connected", ({ peerId: remotePeerId, userId }) => {
-        console.log("User connected event - Remote PeerID:", remotePeerId);
-        if (remotePeerId && remotePeerId !== peer.id) {
-          const call = peer.call(remotePeerId, stream);
-          console.log("Initiating call to peer:", remotePeerId);
-          call.on("stream", (userRemoteStream) => {
-            console.log("Remote stream received on call");
-            setRemoteStream(userRemoteStream);
-          });
-          call.on("error", (err) => {
-            console.error("Call error:", err);
-            toast.error("Failed to establish peer connection");
-          });
-        }
+        registerCall(call.peer, call);
       });
     }).catch(err => {
       console.error("Failed to get local stream", err);
@@ -187,7 +233,8 @@ const MockInterviewSession = () => {
       if (socketRef.current) {
         socketRef.current.off("code-update");
         socketRef.current.off("receive-message");
-        socketRef.current.off("user-connected");
+        socketRef.current.off("user-connected", handleUserConnected);
+        socketRef.current.off("existing-users", handleExistingUsers);
       }
       stopAllMedia();
     };
@@ -198,6 +245,22 @@ const MockInterviewSession = () => {
       stopAllMedia();
     }
   }, [interview?.status]);
+
+  useEffect(() => {
+    if (isFinished) return;
+
+    const tryEnterFullScreen = async () => {
+      if (document.fullscreenElement || isEndingInterviewRef.current) return;
+      try {
+        await document.documentElement.requestFullscreen();
+        setIsFullScreen(true);
+      } catch (err) {
+        console.warn("Auto fullscreen failed:", err);
+      }
+    };
+
+    tryEnterFullScreen();
+  }, [isFinished]);
 
   useEffect(() => {
     if (timeLeft > 0 && !isFinished) {
@@ -243,12 +306,7 @@ const MockInterviewSession = () => {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const handleRunCode = async () => {
-    if (!code) return toast.error("Please write some code first");
-    setIsRunning(true);
-    setOutput("Compiling and running...");
-    setTestResults([]);
-
+  const executeTestCases = async ({ includeHidden = false }) => {
     const langMapping = {
       javascript: { language: "javascript", version: "18.15.0" },
       python: { language: "python", version: "3.10.0" },
@@ -258,46 +316,94 @@ const MockInterviewSession = () => {
 
     const selectedLang = langMapping[language] || langMapping.javascript;
     const currentQuestion = interview?.questions?.[currentQuestionIndex];
-    const testCases = currentQuestion?.testCases || [];
+    const allTestCases = currentQuestion?.testCases || [];
+    const casesToRun = includeHidden ? allTestCases : allTestCases.filter((tc) => !tc.isHidden);
+
+    if (casesToRun.length === 0) {
+      const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
+        language: selectedLang.language,
+        version: selectedLang.version,
+        files: [{ content: code }],
+      });
+
+      return {
+        allPassed: true,
+        totalCases: 0,
+        passedCount: 0,
+        results: [],
+        fallbackOutput: data.run.output || data.run.stderr || "No output",
+      };
+    }
+
+    const results = [];
+    let passedCount = 0;
+
+    for (const tc of casesToRun) {
+      const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
+        language: selectedLang.language,
+        version: selectedLang.version,
+        files: [{ content: code }],
+        stdin: tc.input,
+      });
+
+      const actualOutput = (data.run.output || "").trim();
+      const expectedOutput = (tc.expectedOutput || "").trim();
+      const passed = actualOutput === expectedOutput;
+      if (passed) passedCount++;
+
+      results.push({
+        input: tc.input,
+        expected: tc.expectedOutput,
+        actual: actualOutput,
+        passed,
+        error: data.run.stderr,
+        isHidden: tc.isHidden,
+      });
+    }
+
+    return {
+      allPassed: passedCount === casesToRun.length,
+      totalCases: casesToRun.length,
+      passedCount,
+      results,
+      fallbackOutput: "",
+    };
+  };
+
+  const triggerCelebration = () => {
+    const symbols = ["🎀", "⭐", "✨", "🌟", "🎉"];
+    const particles = Array.from({ length: 42 }, (_, idx) => ({
+      id: idx,
+      left: Math.random() * 100,
+      delay: Math.random() * 0.6,
+      duration: 1.8 + Math.random() * 1.2,
+      size: 16 + Math.round(Math.random() * 16),
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+    }));
+
+    setCelebrationParticles(particles);
+    setShowCelebration(true);
+    setTimeout(() => setShowCelebration(false), 2600);
+  };
+
+  const handleRunCode = async () => {
+    if (!code) return toast.error("Please write some code first");
+    setIsRunning(true);
+    setOutput("Compiling and running...");
+    setTestResults([]);
     
     try {
-      const results = [];
-      let allPassed = true;
+      const execution = await executeTestCases({ includeHidden: false });
 
-      // Run against each test case (limit to first 3 for performance in "Run")
-      const casesToRun = testCases.filter(tc => !tc.isHidden).slice(0, 3);
-      
-      if (casesToRun.length === 0) {
-        // Fallback if no test cases defined
-        const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
-          language: selectedLang.language,
-          version: selectedLang.version,
-          files: [{ content: code }],
-        });
-        setOutput(data.run.output || data.run.stderr || "No output");
+      if (execution.totalCases === 0) {
+        setOutput(execution.fallbackOutput);
       } else {
-        for (const tc of casesToRun) {
-          const { data } = await axios.post("https://emkc.org/api/v2/piston/execute", {
-            language: selectedLang.language,
-            version: selectedLang.version,
-            files: [{ content: code }],
-            stdin: tc.input,
-          });
-
-          const actualOutput = data.run.output.trim();
-          const passed = actualOutput === tc.expectedOutput.trim();
-          if (!passed) allPassed = false;
-
-          results.push({
-            input: tc.input,
-            expected: tc.expectedOutput,
-            actual: actualOutput,
-            passed,
-            error: data.run.stderr
-          });
-        }
-        setTestResults(results);
-        setOutput(allPassed ? "✅ All sample test cases passed!" : "❌ Some test cases failed.");
+        setTestResults(execution.results);
+        setOutput(
+          execution.allPassed
+            ? `✅ All visible test cases passed (${execution.passedCount}/${execution.totalCases}).`
+            : `❌ Visible test cases failed (${execution.passedCount}/${execution.totalCases}).`
+        );
       }
     } catch (error) {
       console.error(error);
@@ -375,7 +481,35 @@ const MockInterviewSession = () => {
     e.preventDefault();
     if (interview.interviewType !== "DSA" && !answer) return toast.error("Please provide an answer");
     if (interview.interviewType === "DSA" && !code) return toast.error("Please provide code");
-    
+
+    if (interview.interviewType === "DSA") {
+      setIsRunning(true);
+      setOutput("Running all test cases before final submission...");
+
+      try {
+        const execution = await executeTestCases({ includeHidden: true });
+        const visibleResults = execution.results.filter((result) => !result.isHidden);
+        setTestResults(visibleResults);
+
+        if (execution.totalCases > 0) {
+          setOutput(`All test cases result: ${execution.passedCount}/${execution.totalCases} passed.`);
+        }
+
+        if (!execution.allPassed) {
+          toast.error("Please pass all test cases before submitting.");
+          return;
+        }
+
+        toast.success("Great work! All test cases passed.");
+      } catch (error) {
+        console.error(error);
+        toast.error("Unable to validate all test cases right now.");
+        return;
+      } finally {
+        setIsRunning(false);
+      }
+    }
+
     setLoading(true);
     try {
       await axios.post(
@@ -390,6 +524,10 @@ const MockInterviewSession = () => {
         { withCredentials: true }
       );
       toast.success("Answer submitted!");
+
+      if (interview.interviewType === "DSA") {
+        triggerCelebration();
+      }
       
       // Move to next question if available
       if (currentQuestionIndex < interview.questions.length - 1) {
@@ -406,13 +544,15 @@ const MockInterviewSession = () => {
       
       fetchInterviewDetails();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Submission failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFinishInterview = async () => {
+  const handleFinishInterview = async (warningMessage = "") => {
+    if (isEndingInterviewRef.current) return;
+    isEndingInterviewRef.current = true;
     try {
       await axios.post(
         "/api/v1/mock/finish",
@@ -423,17 +563,114 @@ const MockInterviewSession = () => {
       // HARD STOP EVERYTHING
       stopAllMedia();
 
-      toast.success("Interview finished!");
+      if (warningMessage) {
+        toast.error(warningMessage);
+      } else {
+        toast.success("Interview finished!");
+      }
       navigateTo("/mock-interviews");
     } catch (err) {
+      isEndingInterviewRef.current = false;
       toast.error("Failed to finish interview");
     }
   };
 
+  useEffect(() => {
+    if (isFinished) return;
+
+    const registerViolation = (reason = "") => {
+      if (isFinished || isEndingInterviewRef.current) return;
+
+      const now = Date.now();
+      if (now - lastViolationAtRef.current < 1200) return;
+      lastViolationAtRef.current = now;
+
+      const nextWarnings = tabSwitchWarningsRef.current + 1;
+      tabSwitchWarningsRef.current = nextWarnings;
+      setTabSwitchWarnings(nextWarnings);
+
+      if (nextWarnings >= MAX_TAB_SWITCH_WARNINGS) {
+        handleFinishInterview("Interview ended: multiple rule violations detected.");
+        return;
+      }
+
+      const remaining = MAX_TAB_SWITCH_WARNINGS - nextWarnings;
+      toast.error(`Warning ${nextWarnings}/${MAX_TAB_SWITCH_WARNINGS}: ${reason || "Stay on interview screen"}. ${remaining} more violation will end interview.`);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) registerViolation();
+    };
+
+    const onWindowBlur = () => {
+      registerViolation("Do not switch window/tab");
+    };
+
+    const onFullscreenChange = () => {
+      const inFullScreen = Boolean(document.fullscreenElement);
+      setIsFullScreen(inFullScreen);
+      if (!inFullScreen) {
+        registerViolation("Do not exit full screen");
+      }
+    };
+
+    const onNavigationViolation = () => {
+      registerViolation("Navigation during interview is not allowed");
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("blur", onWindowBlur);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    window.addEventListener("mock-interview-violation", onNavigationViolation);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("blur", onWindowBlur);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      window.removeEventListener("mock-interview-violation", onNavigationViolation);
+    };
+  }, [isFinished]);
+
   if (!interview) return <div className="page">Loading...</div>;
 
   return (
-    <section className={`jobs page ${isFullScreen ? "full-screen-mode" : ""}`} style={{ padding: 0, background: "#1a1a1a" }}>
+    <section className={`jobs page ${isFullScreen ? "full-screen-mode" : ""}`} style={{ padding: 0, background: "#1a1a1a", position: "relative", overflow: "hidden" }}>
+      {showCelebration && (
+        <>
+          <style>{`
+            @keyframes ccCelebrateFall {
+              0% { transform: translateY(-20vh) rotate(0deg); opacity: 0; }
+              12% { opacity: 1; }
+              100% { transform: translateY(115vh) rotate(380deg); opacity: 0; }
+            }
+            @keyframes ccCelebratePulse {
+              0% { transform: translateX(-50%) scale(0.95); }
+              50% { transform: translateX(-50%) scale(1.03); }
+              100% { transform: translateX(-50%) scale(0.95); }
+            }
+          `}</style>
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1200 }}>
+            <div style={{ position: "absolute", top: "12%", left: "50%", transform: "translateX(-50%)", background: "rgba(255,255,255,0.95)", color: "#1e293b", padding: "14px 26px", borderRadius: "999px", fontWeight: 800, fontSize: "1rem", boxShadow: "0 8px 25px rgba(0,0,0,0.25)", animation: "ccCelebratePulse 1s ease-in-out infinite" }}>
+              🎉 Congrats! All test cases passed! 🎀⭐
+            </div>
+            {celebrationParticles.map((particle) => (
+              <span
+                key={particle.id}
+                style={{
+                  position: "absolute",
+                  top: "-10%",
+                  left: `${particle.left}%`,
+                  fontSize: `${particle.size}px`,
+                  animation: `ccCelebrateFall ${particle.duration}s linear ${particle.delay}s forwards`,
+                  userSelect: "none",
+                }}
+              >
+                {particle.symbol}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
       <div className="container" style={{ maxWidth: "100%", padding: "0", margin: "0" }}>
         {/* Top Navigation Bar (HackerRank Style) */}
         <div style={{ height: "50px", background: "#0e141e", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", borderBottom: "1px solid #323e4f" }}>
@@ -446,6 +683,9 @@ const MockInterviewSession = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
             <div style={{ color: timeLeft < 300 ? "#ff4d4d" : "#00ff41", fontWeight: "700", fontSize: "1rem", background: "rgba(0,0,0,0.3)", padding: "4px 12px", borderRadius: "4px", fontFamily: "monospace" }}>
               {formatTime(timeLeft)}
+            </div>
+            <div style={{ color: tabSwitchWarnings > 0 ? "#ff4d4d" : "#fff", fontWeight: "700", fontSize: "0.85rem", background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "4px" }}>
+              Warnings: {tabSwitchWarnings}/{MAX_TAB_SWITCH_WARNINGS}
             </div>
             <button 
               onClick={() => setViewMode(viewMode === "editor" ? "video" : "editor")}
@@ -638,7 +878,7 @@ const MockInterviewSession = () => {
                 <button className="save-btn" style={{ padding: "4px 12px", fontSize: "0.8rem", background: "#444", color: "#fff" }} onClick={handleRunCode} disabled={isRunning || isFinished}>
                   {isRunning ? "Running..." : <><FaPlay /> Run Code</>}
                 </button>
-                <button className="view-btn" style={{ padding: "4px 12px", fontSize: "0.8rem" }} onClick={handleSubmitAnswer} disabled={loading || isFinished}>
+                <button className="view-btn" style={{ padding: "4px 12px", fontSize: "0.8rem" }} onClick={handleSubmitAnswer} disabled={loading || isFinished || isRunning}>
                   {loading ? "Submitting..." : "Submit Code"}
                 </button>
               </div>

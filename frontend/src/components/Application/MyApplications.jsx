@@ -79,6 +79,60 @@ const MyApplications = () => {
     setModalOpen(false);
   };
 
+  const handleEmployerStatusChange = async (id, status, interviewDate, interviewStatus, zoomLink) => {
+    const targetId = String(id);
+
+    setApplications((prev) =>
+      prev.map((application) =>
+        String(application._id) === targetId
+          ? {
+              ...application,
+              status: status ?? application.status,
+              interviewDate: interviewDate !== undefined ? interviewDate : application.interviewDate,
+              interviewStatus: interviewStatus ?? application.interviewStatus,
+              zoomLink: zoomLink !== undefined ? zoomLink : application.zoomLink,
+            }
+          : application
+      )
+    );
+
+    try {
+      const res = await axios.put(
+        `/api/v1/application/status/${id}`,
+        { status, interviewDate, interviewStatus, zoomLink },
+        { withCredentials: true }
+      );
+
+      toast.success(res.data.message);
+
+      setApplications((prev) =>
+        prev.map((application) => {
+          if (String(application._id) !== targetId) return application;
+
+          const serverApplication = res.data.application || {};
+          return {
+            ...application,
+            ...serverApplication,
+            job: serverApplication.job || application.job,
+            aiScore: application.aiScore,
+            aiRecommendation: application.aiRecommendation,
+            aiReason: application.aiReason,
+          };
+        })
+      );
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Status update failed");
+
+      axios
+        .get("/api/v1/application/employer/getall", {
+          params: { skills: skillFilter, experience: expFilter, aiSort },
+          withCredentials: true,
+        })
+        .then((res) => setApplications(res.data.applications))
+        .catch(() => {});
+    }
+  };
+
   // Group applications by job ID for Employer view
   const groupedApplications = applications.reduce((acc, app) => {
     const jobId = app.job?._id || app.job || "unknown";
@@ -179,21 +233,7 @@ const MyApplications = () => {
                       element={element}
                       key={element._id}
                       openModal={openModal}
-                      onStatusChange={async (id, status, interviewDate, interviewStatus, zoomLink) => {
-                        try {
-                          const res = await axios.put(
-                            `/api/v1/application/status/${id}`,
-                            { status, interviewDate, interviewStatus, zoomLink },
-                            { withCredentials: true }
-                          );
-                          toast.success(res.data.message);
-                          setApplications((prev) =>
-                            prev.map((a) => (a._id === id ? res.data.application : a))
-                          );
-                        } catch (err) {
-                          toast.error(err?.response?.data?.message || "Status update failed");
-                        }
-                      }}
+                      onStatusChange={handleEmployerStatusChange}
                     />
                   ))}
                 </div>
@@ -273,25 +313,29 @@ const JobSeekerCard = ({ element, deleteApplication, openModal }) => {
 };
 
 const EmployerCard = ({ element, openModal, onStatusChange }) => {
+  const [selectedStatus, setSelectedStatus] = useState(element.status || "Applied");
   const [interviewDate, setInterviewDate] = useState(element.interviewDate ? element.interviewDate.substring(0, 16) : "");
   const [interviewStatus, setInterviewStatus] = useState(element.interviewStatus || "Pending");
   const [zoomLink, setZoomLink] = useState(element.zoomLink || "");
 
   useEffect(() => {
+    setSelectedStatus(element.status || "Applied");
     setInterviewDate(element.interviewDate ? element.interviewDate.substring(0, 16) : "");
     setInterviewStatus(element.interviewStatus || "Pending");
     setZoomLink(element.zoomLink || "");
   }, [element]);
 
   const handleChange = (e) => {
-    onStatusChange(element._id, e.target.value, interviewDate, interviewStatus, zoomLink);
+    const nextStatus = e.target.value;
+    setSelectedStatus(nextStatus);
+    onStatusChange(element._id, nextStatus, interviewDate, interviewStatus, zoomLink);
   };
 
   const handleSchedule = () => {
-    onStatusChange(element._id, element.status, interviewDate, interviewStatus, zoomLink);
+    onStatusChange(element._id, selectedStatus, interviewDate, interviewStatus, zoomLink);
   };
 
-  const statusClass = (element.status || "applied").toLowerCase().replace(/\s+/g, "-");
+  const statusClass = (selectedStatus || "applied").toLowerCase().replace(/\s+/g, "-");
 
   return (
     <div className="application-card">
@@ -313,7 +357,7 @@ const EmployerCard = ({ element, openModal, onStatusChange }) => {
           )}
         </div>
         <span className={`status-badge ${statusClass}`}>
-          {element.status || "Applied"}
+          {selectedStatus || "Applied"}
         </span>
       </div>
       <div className="card-body">
@@ -342,7 +386,7 @@ const EmployerCard = ({ element, openModal, onStatusChange }) => {
         </div>
         <select 
           className="status-select" 
-          value={element.status || "Applied"} 
+          value={selectedStatus || "Applied"} 
           onChange={handleChange}
         >
           <option value="Applied">Applied</option>

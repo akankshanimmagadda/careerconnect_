@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
-import { FaRegUser, FaPencilAlt } from "react-icons/fa";
+import { FaRegUser, FaPencilAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import { MdOutlineMailOutline } from "react-icons/md";
-import { RiLock2Fill } from "react-icons/ri";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import toast from "react-hot-toast";
@@ -11,6 +10,7 @@ const NewRegister = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
   const navigate = useNavigate();
 
@@ -196,7 +196,7 @@ const NewRegister = () => {
             <label style={{ display: "block", marginBottom: "6px", fontWeight: "700", color: "#1e293b", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Password</label>
             <div style={{ position: "relative" }}>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -222,7 +222,27 @@ const NewRegister = () => {
                   e.target.style.boxShadow = "none";
                 }}
               />
-              <RiLock2Fill style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", color: "#64748b", fontSize: "18px" }} />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "transparent",
+                  color: "#64748b",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
           </div>
           <button type="submit" style={{ 

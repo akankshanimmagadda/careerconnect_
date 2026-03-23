@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Context } from "../../main";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { GiHamburgerMenu } from "react-icons/gi";
@@ -17,6 +17,24 @@ const Navbar = () => {
   const [show, setShow] = useState(false);
   const { isAuthorized, setIsAuthorized, user, setUser } = useContext(Context);
   const navigateTo = useNavigate();
+  const location = useLocation();
+  const isInMockInterviewSession = location.pathname.startsWith("/mock-interview/");
+
+  const emitInterviewViolation = () => {
+    window.dispatchEvent(new CustomEvent("mock-interview-violation", {
+      detail: { type: "navigation" }
+    }));
+  };
+
+  const handleProtectedNavigation = (event) => {
+    if (isInMockInterviewSession) {
+      event.preventDefault();
+      emitInterviewViolation();
+      toast.error("Navigation is not allowed during mock interview.");
+      return;
+    }
+    setShow(false);
+  };
 
   const handleLogout = async () => {
     try {
@@ -37,26 +55,34 @@ const Navbar = () => {
     }
   };
 
+  const handleLogoutClick = () => {
+    if (isInMockInterviewSession) {
+      emitInterviewViolation();
+      toast.error("Logout is not allowed during mock interview.");
+      return;
+    }
+    handleLogout();
+  };
+
   return (
     <nav className={isAuthorized ? "navbarShow" : "navbarHide"}>
       <div className="container">
         <div className="logo">
-          <img src="/careerconnect-white.png" alt="logo" />
         </div>
         <ul className={!show ? "menu" : "show-menu menu"}>
           <li>
-            <Link to={"/"} onClick={() => setShow(false)}>
+            <Link to={"/"} onClick={handleProtectedNavigation}>
               <AiOutlineHome /> HOME
             </Link>
           </li>
           <li>
-            <Link to={"/job/getall"} onClick={() => setShow(false)}>
+            <Link to={"/job/getall"} onClick={handleProtectedNavigation}>
               <MdOutlineWorkOutline /> ALL JOBS
             </Link>
           </li>
           {user && user.role && user.role.toLowerCase() !== "admin" ? (
             <li>
-              <Link to={"/applications/me"} onClick={() => setShow(false)}>
+              <Link to={"/applications/me"} onClick={handleProtectedNavigation}>
                 <HiOutlineClipboardList /> {user.role === "Employer"
                   ? "APPLICANTS"
                   : "MY APPLICATIONS"}
@@ -66,12 +92,12 @@ const Navbar = () => {
           {user && user.role === "Employer" ? (
             <>
               <li>
-                <Link to={"/job/post"} onClick={() => setShow(false)}>
+                <Link to={"/job/post"} onClick={handleProtectedNavigation}>
                   <MdOutlinePostAdd /> POST JOB
                 </Link>
               </li>
               <li>
-                <Link to={"/job/me"} onClick={() => setShow(false)}>
+                <Link to={"/job/me"} onClick={handleProtectedNavigation}>
                   <MdOutlineWorkOutline /> MY JOBS
                 </Link>
               </li>
@@ -80,7 +106,7 @@ const Navbar = () => {
 
           {user && user.role && user.role.toLowerCase() === "admin" ? (
             <li>
-              <Link to={"/admin/dashboard"} onClick={() => setShow(false)}>
+              <Link to={"/admin/dashboard"} onClick={handleProtectedNavigation}>
                 <FaUserShield /> ADMIN
               </Link>
             </li>
@@ -89,27 +115,27 @@ const Navbar = () => {
           {user && user.role === "Job Seeker" ? (
             <>
               <li>
-                <Link to={"/analyzer"} onClick={() => setShow(false)}>
+                <Link to={"/analyzer"} onClick={handleProtectedNavigation}>
                   <TbAnalyze /> ANALYZER
                 </Link>
               </li>
               <li>
-                <Link to={"/resume-prepare"} onClick={() => setShow(false)}>
+                <Link to={"/resume-prepare"} onClick={handleProtectedNavigation}>
                   <BsFileEarmarkText /> RESUME
                 </Link>
               </li>
               <li>
-                <Link to={"/saved"} onClick={() => setShow(false)}>
+                <Link to={"/saved"} onClick={handleProtectedNavigation}>
                   <MdOutlineSaveAlt /> SAVED
                 </Link>
               </li>
               <li>
-                <Link to={"/experiences"} onClick={() => setShow(false)}>
+                <Link to={"/experiences"} onClick={handleProtectedNavigation}>
                   <RiChatSmile2Line /> EXPERIENCES
                 </Link>
               </li>
               <li>
-                <Link to={"/mock-interviews"} onClick={() => setShow(false)}>
+                <Link to={"/mock-interviews"} onClick={handleProtectedNavigation}>
                   <RiRobotLine /> MOCK INTERVIEW
                 </Link>
               </li>
@@ -117,11 +143,11 @@ const Navbar = () => {
           ) : null}
 
           <li>
-            <Link to={"/profile"} onClick={() => setShow(false)}>
+            <Link to={"/profile"} onClick={handleProtectedNavigation}>
               <AiOutlineUser /> PROFILE
             </Link>
           </li>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="logout-btn" onClick={handleLogoutClick}>
             <AiOutlineLogout /> LOGOUT
           </button>
         </ul>

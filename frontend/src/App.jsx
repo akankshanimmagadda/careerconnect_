@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, lazy, Suspense } from "react";
+import React, { useContext, useEffect, lazy, Suspense, useState } from "react";
 import "./App.css";
 import { Context } from "./main";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import axios from "axios";
+import axios from "./api/axios";
 import { io } from "socket.io-client";
 import Navbar from "./components/Layout/Navbar";
 import Footer from "./components/Layout/Footer";
@@ -34,21 +34,19 @@ const ResumePrepare = lazy(() => import("./components/Resume/ResumePrepare"));
 
 const App = () => {
   const { isAuthorized, setIsAuthorized, setUser, user, setSocket, socket } = useContext(Context);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(
-          `${API_BASE_URL}/api/v1/user/getuser`,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axios.get("/api/v1/user/getuser");
         setUser(response.data.user);
         setIsAuthorized(true);
       } catch (error) {
         setIsAuthorized(false);
         setUser({});
+      } finally {
+        setIsAuthChecking(false);
       }
     };
     fetchUser();
@@ -78,6 +76,14 @@ const App = () => {
       };
     }
   }, [isAuthorized, user?._id]);
+
+  if (isAuthChecking) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <>

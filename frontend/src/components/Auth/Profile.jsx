@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import API_BASE_URL from "../../config";
 import { 
   FaUser, FaEnvelope, FaPhone, FaUserTag, FaFilePdf, FaEdit, FaSave, FaTimes, 
-  FaMapMarkerAlt, FaLinkedin, FaGithub, FaGlobe, FaGraduationCap, FaBriefcase, FaTools 
+  FaMapMarkerAlt, FaLinkedin, FaGithub, FaGlobe, FaGraduationCap, FaBriefcase, FaTools, FaBuilding 
 } from "react-icons/fa";
 
 const Profile = () => {
@@ -22,6 +22,15 @@ const Profile = () => {
   const [linkedin, setLinkedin] = useState("");
   const [github, setGithub] = useState("");
   const [portfolio, setPortfolio] = useState("");
+  const [companyDetails, setCompanyDetails] = useState({
+    companyName: "",
+    designation: "",
+    industry: "",
+    website: "",
+    companySize: "",
+    headquarters: "",
+    aboutCompany: "",
+  });
   const [education, setEducation] = useState([{ institution: "", degree: "", year: "" }]);
   const [experience, setExperience] = useState([{ company: "", role: "", duration: "" }]);
   const [resumeFile, setResumeFile] = useState(null);
@@ -36,19 +45,41 @@ const Profile = () => {
       setLinkedin(user.linkedin || "");
       setGithub(user.github || "");
       setPortfolio(user.portfolio || "");
+      setCompanyDetails({
+        companyName: user.companyDetails?.companyName || "",
+        designation: user.companyDetails?.designation || "",
+        industry: user.companyDetails?.industry || "",
+        website: user.companyDetails?.website || "",
+        companySize: user.companyDetails?.companySize || "",
+        headquarters: user.companyDetails?.headquarters || "",
+        aboutCompany: user.companyDetails?.aboutCompany || "",
+      });
       setEducation(user.education && user.education.length > 0 ? user.education : [{ institution: "", degree: "", year: "" }]);
       setExperience(user.experience && user.experience.length > 0 ? user.experience : [{ company: "", role: "", duration: "" }]);
       
       // Calculate completeness
-      const fields = [
-        user.name, user.email, user.phone, user.bio, user.location, 
+      const baseFields = [
+        user.name, user.email, user.phone, user.bio, user.location,
         user.skills?.length > 0, user.resume, user.linkedin, user.github,
-        user.education?.length > 0, user.experience?.length > 0
       ];
+      const roleFields = user.role === "Employer"
+        ? [
+            user.companyDetails?.companyName,
+            user.companyDetails?.designation,
+            user.companyDetails?.industry,
+            user.companyDetails?.website,
+            user.companyDetails?.headquarters,
+          ]
+        : [user.education?.length > 0, user.experience?.length > 0];
+      const fields = [...baseFields, ...roleFields];
       const filledFields = fields.filter(f => f && f !== "").length;
       setCompleteness(Math.round((filledFields / fields.length) * 100));
     }
   }, [user]);
+
+  const handleCompanyDetailsChange = (field, value) => {
+    setCompanyDetails((prev) => ({ ...prev, [field]: value }));
+  };
 
   if (!user || !user.name) {
     return (
@@ -96,6 +127,9 @@ const Profile = () => {
       formData.append("linkedin", linkedin);
       formData.append("github", github);
       formData.append("portfolio", portfolio);
+      if (user.role === "Employer") {
+        formData.append("companyDetails", JSON.stringify(companyDetails));
+      }
       formData.append("education", JSON.stringify(education));
       formData.append("experience", JSON.stringify(experience));
       
@@ -165,6 +199,63 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+
+              {user.role === "Employer" && (
+                <div className="section">
+                  <h4><FaBuilding /> Company Details</h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <FaBuilding className="icon" />
+                      <div>
+                        <label>Company Name</label>
+                        <p>{user.companyDetails?.companyName || "Not provided"}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <FaUserTag className="icon" />
+                      <div>
+                        <label>Your Designation</label>
+                        <p>{user.companyDetails?.designation || "Not provided"}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <FaBriefcase className="icon" />
+                      <div>
+                        <label>Industry</label>
+                        <p>{user.companyDetails?.industry || "Not provided"}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <FaMapMarkerAlt className="icon" />
+                      <div>
+                        <label>Headquarters</label>
+                        <p>{user.companyDetails?.headquarters || "Not provided"}</p>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <FaGlobe className="icon" />
+                      <div>
+                        <label>Company Website</label>
+                        {user.companyDetails?.website ? (
+                          <p><a href={user.companyDetails.website} target="_blank" rel="noreferrer">{user.companyDetails.website}</a></p>
+                        ) : (
+                          <p>Not provided</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <FaUser className="icon" />
+                      <div>
+                        <label>Company Size</label>
+                        <p>{user.companyDetails?.companySize || "Not provided"}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {user.companyDetails?.aboutCompany && (
+                    <p style={{ marginTop: "10px", color: "#475569" }}>{user.companyDetails.aboutCompany}</p>
+                  )}
+                </div>
+              )}
 
               <div className="section skills-section">
                 <h4><FaTools /> Skills</h4>
@@ -297,6 +388,79 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+
+              {user.role === "Employer" && (
+                <>
+                  <div className="dynamic-section">
+                    <h4>Company Details</h4>
+                    <div className="form-grid">
+                      <div className="input-group">
+                        <label>Company Name</label>
+                        <input
+                          type="text"
+                          value={companyDetails.companyName}
+                          onChange={(e) => handleCompanyDetailsChange("companyName", e.target.value)}
+                          placeholder="Your company name"
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Your Designation</label>
+                        <input
+                          type="text"
+                          value={companyDetails.designation}
+                          onChange={(e) => handleCompanyDetailsChange("designation", e.target.value)}
+                          placeholder="HR Manager, Recruiter..."
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Industry</label>
+                        <input
+                          type="text"
+                          value={companyDetails.industry}
+                          onChange={(e) => handleCompanyDetailsChange("industry", e.target.value)}
+                          placeholder="Software, Healthcare..."
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Company Website</label>
+                        <input
+                          type="text"
+                          value={companyDetails.website}
+                          onChange={(e) => handleCompanyDetailsChange("website", e.target.value)}
+                          placeholder="https://company.com"
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Company Size</label>
+                        <input
+                          type="text"
+                          value={companyDetails.companySize}
+                          onChange={(e) => handleCompanyDetailsChange("companySize", e.target.value)}
+                          placeholder="1-10, 11-50, 51-200..."
+                        />
+                      </div>
+                      <div className="input-group">
+                        <label>Headquarters</label>
+                        <input
+                          type="text"
+                          value={companyDetails.headquarters}
+                          onChange={(e) => handleCompanyDetailsChange("headquarters", e.target.value)}
+                          placeholder="City, Country"
+                        />
+                      </div>
+                    </div>
+                    <div className="input-group" style={{ marginTop: "10px" }}>
+                      <label>About Company</label>
+                      <textarea
+                        value={companyDetails.aboutCompany}
+                        onChange={(e) => handleCompanyDetailsChange("aboutCompany", e.target.value)}
+                        placeholder="Briefly describe your company"
+                        rows="3"
+                      ></textarea>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="dynamic-section">
                 <h4>Education</h4>

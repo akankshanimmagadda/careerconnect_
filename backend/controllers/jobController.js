@@ -8,7 +8,7 @@ import { savedJobTemplate, newJobNotificationTemplate } from "../utils/emailTemp
 export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
   // Support query params for searching and filtering
   const { q, category, country, city, company, minSalary, maxSalary, workMode, experienceLevel, companyType, techStack, page = 1, limit = 9 } = req.query;
-  const filters = { expired: false };
+  const filters = { expired: false, status: "Approved" };
   if (category) filters.category = category;
   if (country) filters.country = country;
   if (city) filters.city = city;
@@ -138,26 +138,13 @@ export const postJob = catchAsyncErrors(async (req, res, next) => {
     companyLogo,
     postedBy,
     applicantLimit: applicantLimit || 0,
+    status: "Pending",
   });
   res.status(200).json({
     success: true,
-    message: "Job Posted Successfully!",
+    message: "Job submitted successfully and is pending admin approval.",
     job,
   });
-
-  // Notify all job seekers about the new job posting
-  try {
-    const jobSeekers = await User.find({ role: "Job Seeker" });
-    for (const seeker of jobSeekers) {
-      await sendEmail({
-        to: seeker.email,
-        subject: `New Job Alert: ${job.title} at ${job.companyName}`,
-        html: newJobNotificationTemplate(seeker.name, job, job._id),
-      });
-    }
-  } catch (err) {
-    console.error("Failed to send new job notifications:", err.message);
-  }
 });
 
 export const getMyJobs = catchAsyncErrors(async (req, res, next) => {
@@ -223,6 +210,15 @@ export const getSingleJob = catchAsyncErrors(async (req, res, next) => {
     if (!job) {
       return next(new ErrorHandler("Job not found.", 404));
     }
+
+    if (
+      job.status !== "Approved" &&
+      req.user.role !== "Admin" &&
+      String(job.postedBy) !== String(req.user._id)
+    ) {
+      return next(new ErrorHandler("Job is not publicly available yet.", 403));
+    }
+
     res.status(200).json({
       success: true,
       job,
@@ -286,8 +282,36 @@ export const adminUpdateJobStatus = catchAsyncErrors(async (req, res, next) => {
   }
   const { id } = req.params;
   const { status } = req.body;
-  const job = await Job.findByIdAndUpdate(id, { status }, { new: true });
+  const allowedStatuses = ["Pending", "Approved", "Rejected"];
+  if (!allowedStatuses.includes(status)) {
+    return next(new ErrorHandler("Invalid status", 400));
+  }
+
+  const existingJob = await Job.findById(id);
+  if (!existingJob) return next(new ErrorHandler("Job not found", 404));
+
+  const previousStatus = existingJob.status;
+  existingJob.status = status;
+  await existingJob.save({ validateBeforeSave: false });
+
+  const job = existingJob;
   if (!job) return next(new ErrorHandler("Job not found", 404));
+
+  if (status === "Approved" && previousStatus !== "Approved") {
+    try {
+      const jobSeekers = await User.find({ role: "Job Seeker" });
+      for (const seeker of jobSeekers) {
+        await sendEmail({
+          to: seeker.email,
+          subject: `New Job Alert: ${job.title} at ${job.companyName}`,
+          html: newJobNotificationTemplate(seeker.name, job, job._id),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to send new job notifications:", err.message);
+    }
+  }
+
   res.status(200).json({ success: true, message: `Job status updated to ${status}`, job });
 });
 

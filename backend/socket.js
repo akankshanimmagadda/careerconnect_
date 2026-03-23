@@ -93,14 +93,17 @@ export const setupSocket = (server) => {
 
       // Broadcast to other users in the same room
       const connectedUsers = [];
-      for (const roomSocket of io.sockets.sockets.get(interviewId) || []) {
-        if (roomSocket.id !== socket.id) {
-          connectedUsers.push({
-            peerId: roomSocket.peerId,
-            userId: roomSocket.userId,
-            userName: roomSocket.userName
-          });
-        }
+      const roomSocketIds = io.sockets.adapter.rooms.get(interviewId) || new Set();
+      for (const socketId of roomSocketIds) {
+        if (socketId === socket.id) continue;
+        const roomSocket = io.sockets.sockets.get(socketId);
+        if (!roomSocket?.peerId) continue;
+
+        connectedUsers.push({
+          peerId: roomSocket.peerId,
+          userId: roomSocket.userId,
+          userName: roomSocket.userName,
+        });
       }
 
       console.log(`Broadcasting user-connected to room ${interviewId}. Connected users:`, connectedUsers);

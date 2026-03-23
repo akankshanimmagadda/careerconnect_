@@ -105,7 +105,7 @@ const PostJob = () => {
       <div className="container">
         <div className="post-header">
           <h3>✨ Post a New Job</h3>
-          <p>Find your next star employee by providing clear and detailed job information.</p>
+          <p>Find your next star employee by providing clear details. Your job will go live after admin approval.</p>
         </div>
 
         <form onSubmit={handleJobPost} className="post-job-form">
@@ -304,7 +304,7 @@ const PostJob = () => {
             </div>
           </div>
 
-          <button type="submit" className="post-job-btn">🚀 Create Job Posting</button>
+          <button type="submit" className="post-job-btn">🚀 Submit for Approval</button>
         </form>
       </div>
     </section>

@@ -28,7 +28,8 @@ const Jobs = () => {
         params: { ...params, page: currentPage },
         withCredentials: true,
       });
-      setJobs(data);
+      const approvedJobs = (data.jobs || []).filter((job) => job.status === "Approved");
+      setJobs({ ...data, jobs: approvedJobs });
       setTotalPages(data.totalPages);
     } catch (error) {
       console.log(error);

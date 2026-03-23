@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 const MyJobs = () => {
   const [myJobs, setMyJobs] = useState([]);
   const [editingMode, setEditingMode] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
   const { isAuthorized, user } = useContext(Context);
 
   const navigateTo = useNavigate();
@@ -92,15 +93,47 @@ const MyJobs = () => {
     );
   };
 
+  const filteredJobs = myJobs.filter((job) => {
+    if (statusFilter === "All") return true;
+    return (job.status || "Pending") === statusFilter;
+  });
+
   return (
     <section className="myJobs page">
       <div className="container">
-        <h1>Manage Your Job Postings</h1>
-        {myJobs.length > 0 ? (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
+          <h1>Manage Your Job Postings</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <label style={{ fontWeight: 700, color: "#334155" }}>Approval Status</label>
+            <select
+              className="searchInput"
+              style={{ margin: 0, minWidth: "180px" }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        {filteredJobs.length > 0 ? (
           <div className="banner">
-            {myJobs.map((element) => (
+            {filteredJobs.map((element) => (
               <div className="card" key={element._id}>
                 <div className="content">
+                  <div style={{ marginBottom: "12px", display: "flex", justifyContent: "flex-end" }}>
+                    <span
+                      className={`badge ${element.status === "Approved" ? "accepted" : element.status === "Rejected" ? "rejected" : "applied"}`}
+                      style={{
+                        background: element.status === "Approved" ? "#dcfce7" : element.status === "Rejected" ? "#fee2e2" : "#dbeafe",
+                      }}
+                    >
+                      {element.status || "Pending"}
+                    </span>
+                  </div>
                   <div className="short_fields">
                     <div>
                       <span>Job Title</span>
@@ -269,7 +302,9 @@ const MyJobs = () => {
         ) : (
           <div className="card" style={{ textAlign: "center", padding: "50px" }}>
             <p style={{ color: "#64748b", fontSize: "1.1rem" }}>
-              You haven't posted any jobs yet. Start by creating your first job posting!
+              {myJobs.length > 0
+                ? `No jobs found for ${statusFilter} status.`
+                : "You haven't posted any jobs yet. Start by creating your first job posting!"}
             </p>
           </div>
         )}

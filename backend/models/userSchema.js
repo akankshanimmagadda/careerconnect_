@@ -75,6 +75,36 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  companyDetails: {
+    companyName: {
+      type: String,
+      default: "",
+    },
+    designation: {
+      type: String,
+      default: "",
+    },
+    industry: {
+      type: String,
+      default: "",
+    },
+    website: {
+      type: String,
+      default: "",
+    },
+    companySize: {
+      type: String,
+      default: "",
+    },
+    headquarters: {
+      type: String,
+      default: "",
+    },
+    aboutCompany: {
+      type: String,
+      default: "",
+    },
+  },
   savedJobs: [
     {
       type: mongoose.Schema.Types.ObjectId,

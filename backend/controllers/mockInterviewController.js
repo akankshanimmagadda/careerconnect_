@@ -141,20 +141,15 @@ export const finishMockInterview = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const startPeerInterview = catchAsyncErrors(async (req, res, next) => {
-  const { category, interviewType, interviewerId } = req.body;
+  const { category, interviewerId } = req.body;
   if (!category || !interviewerId) {
     return next(new ErrorHandler("Category and Interviewer ID are required", 400));
   }
 
   let questions = [];
-  if (interviewType === "DSA") {
-    for (let i = 0; i < 3; i++) {
-      const problem = await generateDSAProblem(category);
-      questions.push(problem);
-    }
-  } else {
-    const generatedQuestions = await generateMockQuestions(category);
-    questions = generatedQuestions.map(q => ({ question: q }));
+  for (let i = 0; i < 3; i++) {
+    const problem = await generateDSAProblem(category);
+    questions.push(problem);
   }
 
   const mockInterview = await MockInterview.create({
@@ -162,7 +157,7 @@ export const startPeerInterview = catchAsyncErrors(async (req, res, next) => {
     interviewer: interviewerId,
     isPeerInterview: true,
     category,
-    interviewType: interviewType || "General",
+    interviewType: "DSA",
     questions,
   });
 

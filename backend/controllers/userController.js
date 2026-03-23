@@ -211,7 +211,8 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     experience, 
     linkedin, 
     github, 
-    portfolio 
+    portfolio,
+    companyDetails
   } = req.body;
 
   const user = await User.findById(userId);
@@ -235,6 +236,19 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
 
   if (experience) {
     user.experience = typeof experience === 'string' ? JSON.parse(experience) : experience;
+  }
+
+  if (companyDetails !== undefined && user.role === "Employer") {
+    const parsedCompanyDetails = typeof companyDetails === "string" ? JSON.parse(companyDetails) : companyDetails;
+    user.companyDetails = {
+      companyName: parsedCompanyDetails?.companyName || "",
+      designation: parsedCompanyDetails?.designation || "",
+      industry: parsedCompanyDetails?.industry || "",
+      website: parsedCompanyDetails?.website || "",
+      companySize: parsedCompanyDetails?.companySize || "",
+      headquarters: parsedCompanyDetails?.headquarters || "",
+      aboutCompany: parsedCompanyDetails?.aboutCompany || "",
+    };
   }
 
   // Handle resume upload

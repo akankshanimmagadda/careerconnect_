@@ -124,7 +124,7 @@ const MockInterviews = () => {
         "/api/v1/mock/start-peer",
         { 
           category: "Full Stack Development", // Default or ask user
-          interviewType: "General",
+          interviewType: "DSA",
           interviewerId: senderId 
         },
         { withCredentials: true }
