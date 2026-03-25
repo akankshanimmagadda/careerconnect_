@@ -12,9 +12,11 @@ Set the following environment variables on your hosting platform:
 - `JWT_SECRET_KEY`: A long random string
 - `JWT_EXPIRE`: `7d`
 - `COOKIE_EXPIRE`: `7`
-- `CLOUDINARY_CLOUD_NAME`: Your Cloudinary name
-- `CLOUDINARY_API_KEY`: Your Cloudinary API key
-- `CLOUDINARY_API_SECRET`: Your Cloudinary API secret
+- `AWS_REGION`: AWS region (e.g., `ap-south-1`)
+- `AWS_ACCESS_KEY_ID`: IAM access key with S3 PutObject permission
+- `AWS_SECRET_ACCESS_KEY`: IAM secret key
+- `AWS_S3_BUCKET_NAME`: S3 bucket for resumes/documents
+- `AWS_S3_PUBLIC_BASE_URL` (optional): Public base URL or CloudFront domain for file delivery
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`: For email notifications
 - `OPENAI_API_KEY`: For AI features
 - `GEMINI_API_KEY`: For AI features

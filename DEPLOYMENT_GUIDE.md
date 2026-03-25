@@ -79,6 +79,11 @@ git push
 - `JWT_SECRET_KEY` = (your secret)
 - `FRONTEND_URL` = `https://careerconnectjobportal.vercel.app`
 - `COOKIE_EXPIRE` = `7` (or your preference)
+- `AWS_REGION` = your AWS region (e.g. `ap-south-1`)
+- `AWS_ACCESS_KEY_ID` = your IAM access key
+- `AWS_SECRET_ACCESS_KEY` = your IAM secret key
+- `AWS_S3_BUCKET_NAME` = your S3 bucket name
+- `AWS_S3_PUBLIC_BASE_URL` = optional public URL base / CloudFront domain
 
 **Vercel (Frontend):**
 - `VITE_API_URL` = `https://careerconnect-backend-u91w.onrender.com`

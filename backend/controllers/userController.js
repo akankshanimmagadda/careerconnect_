@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { sendEmail } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { Job } from "../models/jobSchema.js";
-import cloudinary from "cloudinary";
+import { uploadResumeToS3 } from "../services/s3StorageService.js";
 
 export const register = catchAsyncErrors(async (req, res, next) => {
   let { name, email, password, role } = req.body;
@@ -258,19 +258,8 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("Invalid file type. Please upload a PDF or DOCX file.", 400));
     }
 
-    const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, {
-      folder: "careerconnect/resumes",
-      type: "upload",
-      resource_type: "raw",
-      use_filename: true,
-      unique_filename: true,
-    });
-
-    if (!cloudinaryResponse || cloudinaryResponse.error) {
-      return next(new ErrorHandler("Failed to upload resume. Please try again.", 500));
-    }
-
-    user.resume = cloudinaryResponse.secure_url;
+    const uploadedResume = await uploadResumeToS3(resume);
+    user.resume = uploadedResume.url;
   }
 
   await user.save({ validateBeforeSave: false });

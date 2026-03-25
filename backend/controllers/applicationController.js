@@ -2,10 +2,10 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import ErrorHandler from "../middlewares/error.js";
 import { Application } from "../models/applicationSchema.js";
 import { Job } from "../models/jobSchema.js";
-import cloudinary from "cloudinary";
 import { sendEmail } from "../utils/mailer.js";
 import { applicationConfirmationTemplate, statusUpdateTemplate, interviewNotificationTemplate } from "../utils/emailTemplates.js";
 import { rankApplicantsWithAI } from "../services/aiService.js";
+import { uploadResumeToS3 } from "../services/s3StorageService.js";
 
 export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const { role } = req.user;
@@ -43,24 +43,14 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
     }
 
     try {
-      const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, {
-        folder: "careerconnect/resumes",
-        type: "upload",
-        resource_type: "raw",
-        use_filename: true,
-        unique_filename: true,
-      });
-
-      if (!cloudinaryResponse || cloudinaryResponse.error) {
-        return next(new ErrorHandler("Failed to upload Resume to Cloudinary", 500));
-      }
+      const uploadedResume = await uploadResumeToS3(resume);
       resumeData = {
-        public_id: cloudinaryResponse.public_id,
-        url: cloudinaryResponse.secure_url,
+        public_id: uploadedResume.key,
+        url: uploadedResume.url,
       };
     } catch (error) {
-      if (error.message && error.message.includes("api_key")) {
-        return next(new ErrorHandler("File upload service configuration error", 500));
+      if (error.message && error.message.includes("AWS_")) {
+        return next(new ErrorHandler("AWS S3 configuration error", 500));
       }
       return next(error);
     }
