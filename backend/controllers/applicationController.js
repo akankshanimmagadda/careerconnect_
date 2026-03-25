@@ -43,7 +43,12 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
     }
 
     try {
-      const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath);
+      const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, {
+        folder: "careerconnect/resumes",
+        resource_type: "raw",
+        use_filename: true,
+        unique_filename: true,
+      });
 
       if (!cloudinaryResponse || cloudinaryResponse.error) {
         return next(new ErrorHandler("Failed to upload Resume to Cloudinary", 500));
