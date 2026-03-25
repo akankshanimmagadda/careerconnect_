@@ -45,6 +45,7 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
     try {
       const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, {
         folder: "careerconnect/resumes",
+        type: "upload",
         resource_type: "raw",
         use_filename: true,
         unique_filename: true,
