@@ -7,6 +7,14 @@ console.log("ENV CHECK:", {
   key: process.env.AWS_ACCESS_KEY_ID ? "present" : "missing",
 });
 
+console.log("SMTP CHECK:", {
+  host: process.env.SMTP_HOST || "missing",
+  port: process.env.SMTP_PORT || "missing",
+  user: process.env.SMTP_USER ? "present" : "missing",
+  pass: process.env.SMTP_PASS ? "present" : "missing",
+  from: process.env.SMTP_FROM ? "present" : "missing",
+});
+
 import app from "./app.js";
 import http from "http";
 import { setupSocket } from "./socket.js";

@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 
 let transporter;
 let usingTestAccount = false;
+const isProduction = process.env.NODE_ENV === "production";
 
 const normalizeAppPassword = (value = "") => value.replace(/\s+/g, "").trim();
 
@@ -25,14 +26,29 @@ const createTransporter = async () => {
     Boolean(process.env.SMTP_USER) &&
     Boolean(process.env.SMTP_PASS);
 
+  console.log("[MAILER] SMTP env check:", {
+    host: process.env.SMTP_HOST || "missing",
+    port: process.env.SMTP_PORT || "missing",
+    secure: process.env.SMTP_SECURE || "auto",
+    user: process.env.SMTP_USER ? "present" : "missing",
+    pass: process.env.SMTP_PASS ? "present" : "missing",
+    nodeEnv: process.env.NODE_ENV || "unset",
+  });
+
   // Prefer explicit SMTP config from env
   if (hasSmtpConfig) {
-    console.log("[MAILER] Creating SMTP transporter with Gmail credentials");
+    const smtpPort = Number(process.env.SMTP_PORT) || 587;
+    const smtpSecure =
+      typeof process.env.SMTP_SECURE === "string"
+        ? process.env.SMTP_SECURE === "true"
+        : smtpPort === 465;
+
+    console.log("[MAILER] Creating SMTP transporter");
     try {
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+        port: smtpPort,
+        secure: smtpSecure,
         auth: {
           user: process.env.SMTP_USER,
           pass: normalizeAppPassword(process.env.SMTP_PASS),
@@ -48,6 +64,10 @@ const createTransporter = async () => {
       console.error("[MAILER] SMTP connection failed:", err.message);
       throw new Error("SMTP verification failed. Check SMTP_HOST/PORT/USER/PASS settings.");
     }
+  }
+
+  if (isProduction) {
+    throw new Error("SMTP configuration missing in production. Set SMTP_HOST, SMTP_PORT, SMTP_USER and SMTP_PASS.");
   }
 
   // Fallback: create an Ethereal test account only when SMTP config is absent
