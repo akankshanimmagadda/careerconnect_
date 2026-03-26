@@ -23,9 +23,9 @@ export const isAuthenticated = catchAsyncErrors(async (req, res, next) => {
 
   req.user = await User.findById(decoded.id);
 
-  if (req.user && !req.user.isEmailVerified) {
-    return next(new ErrorHandler("Please verify your email to access this resource.", 401));
-  }
+  // if (req.user && !req.user.isEmailVerified) {
+  //   return next(new ErrorHandler("Please verify your email to access this resource.", 401));
+  // }
 
   next();
 });
