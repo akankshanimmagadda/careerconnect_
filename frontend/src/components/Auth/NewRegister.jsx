@@ -42,7 +42,7 @@ const NewRegister = () => {
         }
       );
       toast.success(data.message || "Registration successful!");
-      navigate("/verify-email", { state: { email } });
+      navigate("/login");
     } catch (error) {
       toast.error(error.response?.data?.message || "Registration failed");
     }

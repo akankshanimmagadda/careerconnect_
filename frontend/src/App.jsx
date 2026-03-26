@@ -24,8 +24,6 @@ const Profile = lazy(() => import("./components/Auth/Profile"));
 const ResumeAnalyzer = lazy(() => import("./components/Analyzer/ResumeAnalyzer"));
 const Recommended = lazy(() => import("./components/Job/Recommended"));
 const SavedJobs = lazy(() => import("./components/Job/SavedJobs"));
-const VerifyEmail = lazy(() => import("./components/Auth/VerifyEmail"));
-const VerifyPending = lazy(() => import("./components/Auth/VerifyPending"));
 const Experiences = lazy(() => import("./components/Experience/Experiences"));
 const MockInterviews = lazy(() => import("./components/MockInterview/MockInterviews"));
 const MockInterviewSession = lazy(() => import("./components/MockInterview/MockInterviewSession"));
@@ -109,7 +107,6 @@ const App = () => {
           <Route path="/mock-interview/:id" element={<MockInterviewSession />} />
           <Route path="/resume-prepare" element={<ResumePrepare />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

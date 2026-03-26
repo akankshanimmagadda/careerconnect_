@@ -42,12 +42,7 @@ const NewLogin = () => {
       setIsAuthorized(true);
       navigate("/");
     } catch (error) {
-      if (error.response?.status === 401 && error.response?.data?.message.toLowerCase().includes("verify")) {
-        toast.error(error.response.data.message);
-        navigate("/verify-email", { state: { email } });
-      } else {
-        toast.error(error.response?.data?.message || "An error occurred during login");
-      }
+      toast.error(error.response?.data?.message || "An error occurred during login");
     }
   };
 

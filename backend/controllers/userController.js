@@ -2,8 +2,6 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { User } from "../models/userSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 import { sendToken } from "../utils/jwtToken.js";
-import crypto from "crypto";
-import { sendEmail } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { Job } from "../models/jobSchema.js";
 import { uploadResumeToS3 } from "../services/s3StorageService.js";
@@ -37,41 +35,17 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Email already registered!", 400));
   }
 
-  const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
-  const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
   const user = await User.create({
     name,
     email,
     password,
     role,
-    isEmailVerified: false,
-    emailVerificationToken: verificationOTP,
-    emailVerificationExpiry: verificationExpiry,
+    isEmailVerified: true,
   });
-
-  try {
-    await sendEmail({
-      to: email,
-      subject: "Verify Your Email - Job Portal",
-      html: `
-        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-          <h2>Welcome to Job Portal!</h2>
-          <p>Thank you for registering. Please use the following code to verify your email address:</p>
-          <h1 style="color: #0f766e; letter-spacing: 5px; font-size: 32px;">${verificationOTP}</h1>
-          <p>This code expires in 24 hours.</p>
-        </div>
-      `,
-    });
-  } catch (mailErr) {
-    console.error("Failed to send verification email:", mailErr.message);
-    await User.findByIdAndDelete(user._id);
-    return next(new ErrorHandler("Unable to send verification email right now. Please try again.", 500));
-  }
 
   res.status(201).json({
     success: true,
-    message: "Registration successful! Please check your email for verification code.",
+    message: "Registration successful! You can now login.",
     email: user.email
   });
 });
@@ -95,11 +69,6 @@ export const login = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler(`User with provided email and ${role} role not found!`, 404)
     );
   }
-
-  if (!user.isEmailVerified) {
-    return next(new ErrorHandler("Please verify your email before logging in.", 401));
-  }
-
   sendToken(user, 200, res, "User Logged In Successfully!");
 });
 
@@ -115,80 +84,6 @@ export const logout = catchAsyncErrors(async (req, res, next) => {
       message: "Logged Out Successfully !",
     });
 });
-
-export const verifyEmail = catchAsyncErrors(async (req, res, next) => {
-  const { otp } = req.body;
-  const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : req.body.email;
-  
-  if (!email || !otp) {
-    return next(new ErrorHandler("Please provide email and OTP.", 400));
-  }
-
-  const user = await User.findOne({ email });
-  
-  if (!user) {
-    return next(new ErrorHandler("User not found.", 404));
-  }
-
-  if (user.isEmailVerified) {
-    return res.status(200).json({ success: true, message: "Email already verified." });
-  }
-
-  if (user.emailVerificationToken !== otp && otp !== "000000") {
-    return next(new ErrorHandler("Invalid OTP.", 400));
-  }
-  
-  if (user.emailVerificationExpiry < Date.now()) {
-    return next(new ErrorHandler("OTP has expired.", 400));
-  }
-  
-  user.isEmailVerified = true;
-  user.emailVerificationToken = null;
-  user.emailVerificationExpiry = null;
-  await user.save({ validateBeforeSave: false });
-  
-  res.status(200).json({ success: true, message: "Email verified successfully! You can now login." });
-});
-
-export const resendVerificationEmail = catchAsyncErrors(async (req, res, next) => {
-  const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : req.body.email;
-  if (!email) return next(new ErrorHandler("Please provide email", 400));
-  
-  const user = await User.findOne({ email });
-  if (!user) return next(new ErrorHandler("User not found", 404));
-  
-  if (user.isEmailVerified) {
-    return res.status(200).json({ success: true, message: "Email already verified." });
-  }
-  
-  const verificationOTP = Math.floor(100000 + Math.random() * 900000).toString();
-  const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  user.emailVerificationToken = verificationOTP;
-  user.emailVerificationExpiry = verificationExpiry;
-  await user.save({ validateBeforeSave: false });
-  
-  try {
-    await sendEmail({
-      to: email,
-      subject: "Verify Your Email - Job Portal",
-      html: `
-        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-          <h2>Email Verification</h2>
-          <p>Your new verification code is:</p>
-          <h1 style="color: #0f766e; letter-spacing: 5px; font-size: 32px;">${verificationOTP}</h1>
-          <p>Please enter this code to verify your email address.</p>
-          <p>This code expires in 24 hours.</p>
-        </div>
-      `,
-    });
-  } catch (mailErr) {
-    console.error("Failed to send verification email:", mailErr.message);
-    return next(new ErrorHandler("Failed to send verification email. Please try again.", 500));
-  }
-  
-  res.status(200).json({ success: true, message: "Verification code sent. Please check your inbox." });
-});
-
 
 export const getUser = catchAsyncErrors((req, res, next) => {
   const user = req.user;

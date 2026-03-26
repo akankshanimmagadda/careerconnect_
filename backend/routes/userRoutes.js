@@ -5,8 +5,6 @@ import {
   logout, 
   getUser, 
   updateProfile, 
-  verifyEmail, 
-  resendVerificationEmail,
   toggleAvailability,
   getAvailableJobSeekers,
   adminGetAllUsers,
@@ -25,8 +23,6 @@ router.post("/login", loginLimiter, login);
 router.get("/logout", isAuthenticated, logout);
 router.get("/getuser", isAuthenticated, getUser);
 router.put("/update", isAuthenticated, updateProfile);
-router.post("/verify-email", verifyEmail);
-router.post("/resend-verification", resendVerificationEmail);
 router.post("/chat", isAuthenticated, chat);
 router.put("/availability", isAuthenticated, toggleAvailability);
 router.get("/available-job-seekers", isAuthenticated, getAvailableJobSeekers);
